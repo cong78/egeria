@@ -4,20 +4,29 @@ package org.odpi.openmetadata.adminservices.configuration.properties;
 
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 
+import java.util.List;
+import java.util.Map;
+
 
 /**
- * The Data platform config class provides the properties for the data-platform-services..
+ * The Data platform config class provides the properties for the data-platform-services.
  */
 public class DataPlatformConfig extends AdminServicesConfigHeader {
 
+    /* Properties needed to call the access service REST APIs */
     private String      dataPlatformServerURL;
     private String      dataPlatformServerName;
-    private String      dataPlatformGUID = null;
-    private Connection  dataPlatformConnection;
+
+    private String      dataPlatformConnectionProvider   = null;
+    private Connection  dataPlatformConnection = null;
 
     /* Connection for topic that send out topics */
-    private String      dataPlatformServerOutTopicName;
-    private Connection  dataPlatformServerOutTopic;
+    private String      dataPlatformServiceOutTopicName;
+    private Connection  dataPlatformServiceOutTopic;
+
+    /* Properties for a list of data platforms  */
+    private List<String> dataPlatformGUIDs = null;
+    private Map<String, Object> dataPlatformConfig = null;
 
 
     /**
@@ -31,14 +40,14 @@ public class DataPlatformConfig extends AdminServicesConfigHeader {
      *
      * @param template object to copy
      */
-    public DataPlatformConfig(AdminServicesConfigHeader template, String dataPlatformServerURL, String dataPlatformServerName, String dataPlatformGUID, Connection dataPlatformConnection, String dataPlatformServerOutTopicName, Connection dataPlatformServerOutTopic) {
+    public DataPlatformConfig(AdminServicesConfigHeader template, String dataPlatformServerURL, String dataPlatformServerName, List<String> dataPlatformGUIDs, Connection dataPlatformConnection, String dataPlatformServiceOutTopicName, Connection dataPlatformServiceOutTopic) {
         super(template);
         this.dataPlatformServerURL = dataPlatformServerURL;
         this.dataPlatformServerName = dataPlatformServerName;
-        this.dataPlatformGUID = dataPlatformGUID;
+        this.dataPlatformGUIDs = dataPlatformGUIDs;
         this.dataPlatformConnection = dataPlatformConnection;
-        this.dataPlatformServerOutTopicName = dataPlatformServerOutTopicName;
-        this.dataPlatformServerOutTopic = dataPlatformServerOutTopic;
+        this.dataPlatformServiceOutTopicName = dataPlatformServiceOutTopicName;
+        this.dataPlatformServiceOutTopic = dataPlatformServiceOutTopic;
     }
 
     public String getDataPlatformServerURL() {
@@ -57,12 +66,28 @@ public class DataPlatformConfig extends AdminServicesConfigHeader {
         this.dataPlatformServerName = dataPlatformServerName;
     }
 
-    public String getDataPlatformGUID() {
-        return dataPlatformGUID;
+    public String getDataPlatformConnectionProvider() {
+        return dataPlatformConnectionProvider;
     }
 
-    public void setDataPlatformGUID(String dataPlatformGUID) {
-        this.dataPlatformGUID = dataPlatformGUID;
+    public void setDataPlatformConnectionProvider(String dataPlatformConnectionProvider) {
+        this.dataPlatformConnectionProvider = dataPlatformConnectionProvider;
+    }
+
+    public List<String> getDataPlatformGUIDs() {
+        return dataPlatformGUIDs;
+    }
+
+    public void setDataPlatformGUIDs(List<String> dataPlatformGUIDs) {
+        this.dataPlatformGUIDs = dataPlatformGUIDs;
+    }
+
+    public Map<String, Object> getDataPlatformConfig() {
+        return dataPlatformConfig;
+    }
+
+    public void setDataPlatformConfig(Map<String, Object> dataPlatformConfig) {
+        this.dataPlatformConfig = dataPlatformConfig;
     }
 
     public Connection getDataPlatformConnection() {
@@ -73,20 +98,20 @@ public class DataPlatformConfig extends AdminServicesConfigHeader {
         this.dataPlatformConnection = dataPlatformConnection;
     }
 
-    public String getDataPlatformServerOutTopicName() {
-        return dataPlatformServerOutTopicName;
+    public String getDataPlatformServiceOutTopicName() {
+        return dataPlatformServiceOutTopicName;
     }
 
-    public void setDataPlatformServerOutTopicName(String dataPlatformServerOutTopicName) {
-        this.dataPlatformServerOutTopicName = dataPlatformServerOutTopicName;
+    public void setDataPlatformServiceOutTopicName(String dataPlatformServiceOutTopicName) {
+        this.dataPlatformServiceOutTopicName = dataPlatformServiceOutTopicName;
     }
 
-    public Connection getDataPlatformServerOutTopic() {
-        return dataPlatformServerOutTopic;
+    public Connection getDataPlatformServiceOutTopic() {
+        return dataPlatformServiceOutTopic;
     }
 
-    public void setDataPlatformServerOutTopic(Connection dataPlatformServerOutTopic) {
-        this.dataPlatformServerOutTopic = dataPlatformServerOutTopic;
+    public void setDataPlatformServiceOutTopic(Connection dataPlatformServiceOutTopic) {
+        this.dataPlatformServiceOutTopic = dataPlatformServiceOutTopic;
     }
 
     @Override
@@ -94,10 +119,12 @@ public class DataPlatformConfig extends AdminServicesConfigHeader {
         return "DataPlatformConfig{" +
                 "dataPlatformServerURL='" + dataPlatformServerURL + '\'' +
                 ", dataPlatformServerName='" + dataPlatformServerName + '\'' +
-                ", dataPlatformGUID='" + dataPlatformGUID + '\'' +
+                ", dataPlatformConnectionProvider='" + dataPlatformConnectionProvider + '\'' +
                 ", dataPlatformConnection=" + dataPlatformConnection +
-                ", dataPlatformServerOutTopicName='" + dataPlatformServerOutTopicName + '\'' +
-                ", dataPlatformServerOutTopic=" + dataPlatformServerOutTopic +
+                ", dataPlatformServiceOutTopicName='" + dataPlatformServiceOutTopicName + '\'' +
+                ", dataPlatformServiceOutTopic=" + dataPlatformServiceOutTopic +
+                ", dataPlatformGUIDs=" + dataPlatformGUIDs +
+                ", dataPlatformConfig=" + dataPlatformConfig +
                 "} " + super.toString();
     }
 }

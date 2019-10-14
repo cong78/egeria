@@ -856,7 +856,7 @@ public class ConnectorConfigurationFactory
         endpointProperties.put("connectorProviderName", connectorProviderClassName);
         endpoint.setAdditionalProperties(endpointProperties);
 
-        String connectionName = "Cassandra.Connection." + serverName;
+        String connectionName = "DataPlatform.Connection." + serverName;
         connection.setType(this.getConnectionType());
         connection.setGUID(connectionGUID);
         connection.setQualifiedName(connectionName);
@@ -864,8 +864,6 @@ public class ConnectorConfigurationFactory
         connection.setDescription(connectionDescription);
         connection.setEndpoint(endpoint);
 
-        CassandraStoreConnector cassandraStoreConnector = new CassandraStoreConnector();
-       // connection.setConnectorType(cassandraStoreConnector.getConnectorType());
         return connection;
     }
 

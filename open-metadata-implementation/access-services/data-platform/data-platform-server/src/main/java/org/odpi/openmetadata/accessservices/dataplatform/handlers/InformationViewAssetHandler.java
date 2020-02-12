@@ -2,179 +2,269 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.dataplatform.handlers;
 
-import org.odpi.openmetadata.accessservices.dataplatform.contentmanager.OMEntityDao;
 import org.odpi.openmetadata.accessservices.dataplatform.events.NewViewEvent;
+import org.odpi.openmetadata.accessservices.dataplatform.service.DataPlatformAssetService;
 import org.odpi.openmetadata.accessservices.dataplatform.utils.Constants;
 import org.odpi.openmetadata.accessservices.dataplatform.utils.EntityPropertiesBuilder;
 import org.odpi.openmetadata.accessservices.dataplatform.utils.QualifiedNameUtils;
 import org.odpi.openmetadata.accessservices.dataplatform.beans.InformationViewAsset;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Classification;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
+import org.odpi.openmetadata.commonservices.ffdc.InvalidParameterHandler;
+import org.odpi.openmetadata.commonservices.repositoryhandler.RepositoryHandler;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceProperties;
-import org.odpi.openmetadata.repositoryservices.ffdc.exception.*;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
+import static org.odpi.openmetadata.accessservices.dataplatform.mappers.InformationViewAssetMapper.*;
 
 /**
- * The type Information view asset handler.
+ * The Information view asset handler creates entities and relationships from NewViewEvents.
  */
-public class InformationViewAssetHandler implements Callable<InformationViewAsset> {
+public class InformationViewAssetHandler {
 
+    private String serviceName;
+    private OMRSRepositoryHelper repositoryHelper;
+    private RepositoryHandler repositoryHandler;
+    private InvalidParameterHandler invalidParameterHandler;
 
-    private NewViewEvent event;
-    private OMEntityDao omEntityDao;
-
-    /**
-     * Instantiates a new Information view asset handler.
-     *
-     * @param event       the event
-     * @param omEntityDao the om entity dao
-     */
-    public InformationViewAssetHandler(NewViewEvent event, OMEntityDao omEntityDao) {
-        this.event = event;
-        this.omEntityDao = omEntityDao;
+    public InformationViewAssetHandler(String serviceName, OMRSRepositoryHelper repositoryHelper, RepositoryHandler repositoryHandler, InvalidParameterHandler invalidParameterHandler) {
+        this.serviceName = serviceName;
+        this.repositoryHelper = repositoryHelper;
+        this.repositoryHandler = repositoryHandler;
+        this.invalidParameterHandler = invalidParameterHandler;
     }
 
+    public void createInformationViewAsset(NewViewEvent event)
+            throws UserNotAuthorizedException, PropertyServerException, InvalidParameterException {
 
-    public InformationViewAsset call() throws TypeErrorException, InvalidParameterException,
-            StatusNotSupportedException, PropertyErrorException,
-            EntityNotKnownException, FunctionNotSupportedException,
-            PagingErrorException, ClassificationErrorException,
-            UserNotAuthorizedException, RepositoryErrorException {
+        /*
+        Step 1: Create Software Server Entity
+        */
+        final String createSoftwareServerEntity = "createSoftwareServerEntity";
 
-        String qualifiedNameForRelationalDbSchemaType = QualifiedNameUtils.buildQualifiedNameForRelationalDbSchemaType(event.getTableSource().getDatabaseSource().getEndpointSource().getNetworkAddress().split(":")[0], event.getTableSource().getDatabaseSource().getName(), event.getTableSource().getSchemaName());
-        EntityDetail relationalDbSchemaType = omEntityDao.getEntity(Constants.RELATIONAL_DB_SCHEMA_TYPE, qualifiedNameForRelationalDbSchemaType, false);
+        String qualifiedNameForSoftwareServer = QualifiedNameUtils.buildQualifiedName("", SOFTWARE_SERVER_TYPE_NAME, event.getTableSource().getDatabaseSource().getEndpointSource().getNetworkAddress().split(":")[0]);
 
-        if (relationalDbSchemaType == null) {
-            return createInformationView();
-        }
-        InformationViewAsset informationViewAsset = new InformationViewAsset();
-        informationViewAsset.setRelationalDbSchemaType(relationalDbSchemaType);
-        return informationViewAsset;
-
-    }
-
-    private InformationViewAsset createInformationView() throws TypeErrorException,
-            InvalidParameterException,
-            StatusNotSupportedException,
-            PropertyErrorException,
-            EntityNotKnownException,
-            FunctionNotSupportedException,
-            PagingErrorException,
-            ClassificationErrorException,
-            UserNotAuthorizedException,
-            RepositoryErrorException {
-
-        InformationViewAsset informationViewAsset = new InformationViewAsset();
-        String qualifiedNameForSoftwareServer = QualifiedNameUtils.buildQualifiedName("", Constants.SOFTWARE_SERVER, event.getTableSource().getDatabaseSource().getEndpointSource().getNetworkAddress().split(":")[0]);
         InstanceProperties softwareServerProperties = new EntityPropertiesBuilder()
                 .withStringProperty(Constants.QUALIFIED_NAME, qualifiedNameForSoftwareServer)
                 .withStringProperty(Constants.NAME, qualifiedNameForSoftwareServer)
                 .build();
-        List<Classification> classificationList = new ArrayList();
-        classificationList.add(omEntityDao.buildClassification(Constants.DATABASE_SERVER, Constants.SOFTWARE_SERVER, new InstanceProperties()));
-        EntityDetail softwareServerEntity = omEntityDao.addEntity(Constants.SOFTWARE_SERVER,
-                qualifiedNameForSoftwareServer, softwareServerProperties, classificationList, true);
-        informationViewAsset.setSoftwareServerEntity(softwareServerEntity);
 
-        String qualifiedNameForEndpoint = QualifiedNameUtils.buildQualifiedName("", Constants.ENDPOINT, event.getTableSource().getDatabaseSource().getEndpointSource().getProtocol() + event.getTableSource().getDatabaseSource().getEndpointSource().getNetworkAddress());
+        invalidParameterHandler.validateUserId(Constants.DATA_PLATFORM_USER_ID, createSoftwareServerEntity);
+
+
+        String softwareServerEntityGuid = repositoryHandler.createEntity(
+                Constants.DATA_PLATFORM_USER_ID,
+                SOFTWARE_SERVER_TYPE_GUID,
+                SOFTWARE_SERVER_TYPE_NAME,
+                softwareServerProperties,
+                createSoftwareServerEntity);
+
+        /*
+        Step 2: Create Endpoint Entity
+        */
+        final String createEndpointEntity = "createEndpointEntity";
+
+        String qualifiedNameForEndpoint = QualifiedNameUtils.buildQualifiedName("", ENDPOINT_TYPE_NAME, event.getTableSource().getDatabaseSource().getEndpointSource().getProtocol() + event.getTableSource().getDatabaseSource().getEndpointSource().getNetworkAddress());
+
         InstanceProperties endpointProperties = new EntityPropertiesBuilder()
                 .withStringProperty(Constants.QUALIFIED_NAME, qualifiedNameForEndpoint)
                 .withStringProperty(Constants.NAME, qualifiedNameForEndpoint)
                 .withStringProperty(Constants.NETWORK_ADDRESS, event.getTableSource().getDatabaseSource().getEndpointSource().getNetworkAddress())
                 .withStringProperty(Constants.PROTOCOL, event.getTableSource().getDatabaseSource().getEndpointSource().getProtocol())
                 .build();
-        EntityDetail endpointEntity = omEntityDao.addEntity(Constants.ENDPOINT,
-                qualifiedNameForEndpoint,
+
+        String endpointEntityGuid = repositoryHandler.createEntity(
+                Constants.DATA_PLATFORM_USER_ID,
+                ENDPOINT_TYPE_GUID,
+                ENDPOINT_TYPE_NAME,
                 endpointProperties,
-                false);
-        informationViewAsset.setEndpointProperties(endpointEntity);
+                createEndpointEntity);
 
-        omEntityDao.addRelationship(Constants.SERVER_ENDPOINT,
-                softwareServerEntity.getGUID(),
-                endpointEntity.getGUID(),
-                new InstanceProperties());
+        /*
+        Step 3: Create Relationship between Software Server Entity and Endpoint Entity
+        */
 
-        String qualifiedNameForConnection = QualifiedNameUtils.buildQualifiedName(qualifiedNameForEndpoint, Constants.CONNECTION, event.getTableSource().getDatabaseSource().getEndpointSource().getUser());
+        final String createServerEndpointRelationship = "createServerEndpointRelationship";
+
+        repositoryHandler.createRelationship(
+                Constants.DATA_PLATFORM_USER_ID,
+                SERVER_ENDPOINT_TYPE_GUID,
+                softwareServerEntityGuid,
+                endpointEntityGuid,
+                new InstanceProperties(),
+                createServerEndpointRelationship);
+
+
+        /*
+        Step 4: Create Connection Entity
+        */
+
+        final String createConnectionEntity = "createConnectionEntity";
+
+        String qualifiedNameForConnection = QualifiedNameUtils.buildQualifiedName(qualifiedNameForEndpoint, CONNECTION_TYPE_NAME, event.getTableSource().getDatabaseSource().getEndpointSource().getUser());
         InstanceProperties connectionProperties = new EntityPropertiesBuilder()
                 .withStringProperty(Constants.QUALIFIED_NAME, qualifiedNameForConnection)
                 .withStringProperty(Constants.DESCRIPTION, "Connection to " + qualifiedNameForConnection)
                 .build();
-        EntityDetail connectionEntity = omEntityDao.addEntity(Constants.CONNECTION,
-                qualifiedNameForConnection, connectionProperties, false);
-        informationViewAsset.setConnectionEntity(connectionEntity);
 
-        omEntityDao.addRelationship(Constants.CONNECTION_TO_ENDPOINT,
-                endpointEntity.getGUID(),
-                connectionEntity.getGUID(),
-                new InstanceProperties());
+        String connectionEntityGuid = repositoryHandler.createEntity(
+                Constants.DATA_PLATFORM_USER_ID,
+                CONNECTION_TYPE_GUID,
+                CONNECTION_TYPE_NAME,
+                connectionProperties,
+                createConnectionEntity);
 
+        /*
+        Step 5: Create Relationship between Software Server Entity and Endpoint Entity
+        */
 
-        String qualifiedNameForConnectorType = QualifiedNameUtils.buildQualifiedName("", Constants.CONNECTION_CONNECTOR_TYPE, event.getTableSource().getDatabaseSource().getEndpointSource().getConnectorProviderName());
+        final String createConnectionEndpointRelationship = "createConnectionEndpointRelationship";
+
+        repositoryHandler.createRelationship(
+                Constants.DATA_PLATFORM_USER_ID,
+                CONNECTION_ENDPOINT_TYPE_GUID,
+                connectionEntityGuid,
+                endpointEntityGuid,
+                new InstanceProperties(),
+                createConnectionEndpointRelationship);
+
+        /*
+        Step 6: Create Connector Type Entity
+        */
+
+        final String createConnectorTypeEntity = "createConnectorTypeEntity";
+
+        String qualifiedNameForConnectorType = QualifiedNameUtils.buildQualifiedName("", CONNECTION_TYPE_NAME, event.getTableSource().getDatabaseSource().getEndpointSource().getConnectorProviderName());
         InstanceProperties connectorTypeProperties = new EntityPropertiesBuilder()
                 .withStringProperty(Constants.QUALIFIED_NAME, qualifiedNameForConnectorType)
                 .withStringProperty(Constants.CONNECTOR_PROVIDER_CLASSNAME, event.getTableSource().getDatabaseSource().getEndpointSource().getConnectorProviderName())
                 .build();
-        EntityDetail connectorTypeEntity = omEntityDao.addEntity(Constants.CONNECTOR_TYPE,
-                qualifiedNameForConnectorType, connectorTypeProperties, false);
-        informationViewAsset.setConnectorTypeEntity(connectorTypeEntity);
 
-        omEntityDao.addRelationship(Constants.CONNECTION_CONNECTOR_TYPE,
-                connectionEntity.getGUID(),
-                connectorTypeEntity.getGUID(),
-                new InstanceProperties());
+        String connectorTypeEntityGuid = repositoryHandler.createEntity(
+                Constants.DATA_PLATFORM_USER_ID,
+                CONNECTOR_TYPE_TYPE_GUID,
+                CONNECTOR_TYPE_TYPE_NAME,
+                connectorTypeProperties,
+                createConnectorTypeEntity);
 
-        String qualifiedNameForDatabase = QualifiedNameUtils.buildQualifiedName(qualifiedNameForSoftwareServer, Constants.DATABASE, event.getTableSource().getDatabaseSource().getName());
+
+        /*
+        Step 7: create Connection ConnectorType Relationship
+        */
+
+        final String createConnectionConnectorTypeRelationship = "createConnectionConnectorTypeRelationship";
+
+        repositoryHandler.createRelationship(
+                Constants.DATA_PLATFORM_USER_ID,
+                CONNECTION_CONNECTOR_TYPE_TYPE_GUID,
+                connectionEntityGuid,
+                connectorTypeEntityGuid,
+                new InstanceProperties(),
+                createConnectionConnectorTypeRelationship);
+
+        /*
+        Step 8: create Database Entity
+        */
+        final String createDatabaseEntity = "createDatabaseEntity";
+
+        String qualifiedNameForDatabase = QualifiedNameUtils.buildQualifiedName(qualifiedNameForSoftwareServer, DATABASE_TYPE_NAME, event.getTableSource().getDatabaseSource().getName());
         InstanceProperties databaseProperties = new EntityPropertiesBuilder()
                 .withStringProperty(Constants.QUALIFIED_NAME, qualifiedNameForDatabase)
                 .withStringProperty(Constants.NAME, event.getTableSource().getDatabaseSource().getName())
                 .build();
-        EntityDetail database = omEntityDao.addEntity(Constants.DATABASE, qualifiedNameForDatabase, databaseProperties, true);
-        informationViewAsset.setDatabase(database);
 
-        omEntityDao.addRelationship(Constants.CONNECTION_TO_ASSET,
-                connectionEntity.getGUID(),
-                database.getGUID(),
-                new InstanceProperties());
+        String databaseEntityGuid = repositoryHandler.createEntity(
+                Constants.DATA_PLATFORM_USER_ID,
+                DATABASE_TYPE_GUID,
+                DATABASE_TYPE_NAME,
+                databaseProperties,
+                createDatabaseEntity);
 
-        String qualifiedNameForInformationView = QualifiedNameUtils.buildQualifiedName(qualifiedNameForDatabase, Constants.INFORMATION_VIEW, event.getTableSource().getSchemaName());
-        InstanceProperties ivProperties = new EntityPropertiesBuilder()
+        /*
+        Step 9: create Connection To Asset Relationship
+        */
+
+        final String createConnectionToAssetTypeRelationship = "createConnectionToAssetTypeRelationship";
+
+        repositoryHandler.createRelationship(
+                Constants.DATA_PLATFORM_USER_ID,
+                CONNECTION_TO_ASSET_TYPE_GUID,
+                connectionEntityGuid,
+                databaseEntityGuid,
+                new InstanceProperties(),
+                createConnectionToAssetTypeRelationship);
+
+        /*
+        Step 10: create Information View Entity
+        */
+
+        final String createInformationViewEntity = "createInformationViewEntity";
+
+        String qualifiedNameForInformationView = QualifiedNameUtils.buildQualifiedName(qualifiedNameForDatabase, INFORMATION_VIEW_TYPE_NAME, event.getTableSource().getSchemaName());
+        InstanceProperties informationViewProperties = new EntityPropertiesBuilder()
                 .withStringProperty(Constants.QUALIFIED_NAME, qualifiedNameForInformationView)
                 .withStringProperty(Constants.NAME, event.getTableSource().getSchemaName())
                 .withStringProperty(Constants.OWNER, "")
                 .withStringProperty(Constants.DESCRIPTION, "This asset is an " + "information " + "view")
                 .build();
-        EntityDetail informationViewEntity = omEntityDao.addEntity(Constants.INFORMATION_VIEW,
-                qualifiedNameForInformationView, ivProperties, true);
-        informationViewAsset.setInformationViewEntity(informationViewEntity);
 
-        omEntityDao.addRelationship(Constants.DATA_CONTENT_FOR_DATASET,
-                database.getGUID(),
-                informationViewEntity.getGUID(),
-                new InstanceProperties());
+        String informationViewEntityGuid = repositoryHandler.createEntity(
+                Constants.DATA_PLATFORM_USER_ID,
+                INFORMATION_VIEW_TYPE_GUID,
+                INFORMATION_VIEW_TYPE_NAME,
+                informationViewProperties,
+                createInformationViewEntity);
 
-        String qualifiedNameForDbSchemaType = QualifiedNameUtils.buildQualifiedName(qualifiedNameForDatabase, Constants.RELATIONAL_DB_SCHEMA_TYPE, event.getTableSource().getSchemaName() + Constants.TYPE_SUFFIX);
+
+        /*
+        Step 9: create Connection To Asset Relationship
+        */
+
+        final String createDataContentForDataSetRelationship = "createDataContentForDataSetRelationship";
+
+        repositoryHandler.createRelationship(
+                Constants.DATA_PLATFORM_USER_ID,
+                DATA_CONTENT_FOR_DATASET_TYPE_GUID,
+                databaseEntityGuid,
+                informationViewEntityGuid,
+                new InstanceProperties(),
+                createDataContentForDataSetRelationship);
+
+
+         /*
+        Step 10: create Relational DB Schema Type Entity
+        */
+
+        final String createRelationalDBSchemaTypeEntity = "createRelationalDBSchemaTypeEntity";
+
+        String qualifiedNameForDbSchemaType = QualifiedNameUtils.buildQualifiedName(qualifiedNameForDatabase, RELATIONAL_DB_SCHEMA_TYPE_TYPE_NAME, event.getTableSource().getSchemaName() + Constants.TYPE_SUFFIX);
         InstanceProperties dbSchemaTypeProperties = new EntityPropertiesBuilder()
                 .withStringProperty(Constants.QUALIFIED_NAME, qualifiedNameForDbSchemaType)
                 .withStringProperty(Constants.DISPLAY_NAME, event.getTableSource().getSchemaName() + Constants.TYPE_SUFFIX)
                 .withStringProperty(Constants.AUTHOR, "")
                 .withStringProperty(Constants.USAGE, "")
                 .withStringProperty(Constants.ENCODING_STANDARD, "").build();
-        EntityDetail relationalDbSchemaType = omEntityDao.addEntity(Constants.RELATIONAL_DB_SCHEMA_TYPE,
-                qualifiedNameForDbSchemaType,
+
+        String relationalDBSchemaTypeEntityGuid = repositoryHandler.createEntity(
+                Constants.DATA_PLATFORM_USER_ID,
+                RELATIONAL_DB_SCHEMA_TYPE_TYPE_GUID,
+                RELATIONAL_DB_SCHEMA_TYPE_TYPE_NAME,
                 dbSchemaTypeProperties,
-                false);
-        informationViewAsset.setRelationalDbSchemaType(relationalDbSchemaType);
+                createRelationalDBSchemaTypeEntity);
 
+        /*
+        Step 11: create Asset To Schema Type Relationship
+        */
 
-        omEntityDao.addRelationship(Constants.ASSET_SCHEMA_TYPE,
-                informationViewEntity.getGUID(),
-                relationalDbSchemaType.getGUID(),
-                new InstanceProperties());
-        return informationViewAsset;
+        final String createAssetToSchemaTypeRelationship = "createAssetToSchemaTypeRelationship";
+
+        repositoryHandler.createRelationship(
+                Constants.DATA_PLATFORM_USER_ID,
+                ASSET_SCHEMA_TYPE_TYPE_GUID,
+                informationViewEntityGuid,
+                relationalDBSchemaTypeEntityGuid,
+                new InstanceProperties(),
+                createAssetToSchemaTypeRelationship);
     }
-
-
 }

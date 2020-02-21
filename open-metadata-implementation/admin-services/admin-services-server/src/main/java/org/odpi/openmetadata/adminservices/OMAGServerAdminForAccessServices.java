@@ -8,14 +8,16 @@ import org.odpi.openmetadata.adminservices.configuration.OMAGAccessServiceRegist
 import org.odpi.openmetadata.adminservices.configuration.properties.*;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceOperationalStatus;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceRegistration;
+import org.odpi.openmetadata.adminservices.configuration.registration.CommonServicesDescription;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGInvalidParameterException;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGNotAuthorizedException;
+import org.odpi.openmetadata.commonservices.ffdc.RESTCallLogger;
+import org.odpi.openmetadata.commonservices.ffdc.RESTCallToken;
 import org.odpi.openmetadata.commonservices.ffdc.rest.RegisteredOMAGService;
 import org.odpi.openmetadata.commonservices.ffdc.rest.RegisteredOMAGServicesResponse;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.odpi.openmetadata.repositoryservices.admin.OMRSConfigurationFactory;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
@@ -29,7 +31,8 @@ import java.util.Map;
  */
 public class OMAGServerAdminForAccessServices
 {
-    private static final Logger log = LoggerFactory.getLogger(OMAGServerAdminForAccessServices.class);
+    private static RESTCallLogger restCallLogger = new RESTCallLogger(LoggerFactory.getLogger(OMAGServerAdminForAccessServices.class),
+                                                                      CommonServicesDescription.ADMIN_OPERATIONAL_SERVICES.getServiceName());
 
     private static final String      defaultInTopicName = "InTopic";
     private static final String      defaultOutTopicName = "OutTopic";
@@ -60,7 +63,7 @@ public class OMAGServerAdminForAccessServices
     {
         final String methodName = "getConfiguredAccessServices";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         RegisteredOMAGServicesResponse response = new RegisteredOMAGServicesResponse();
 
@@ -115,7 +118,7 @@ public class OMAGServerAdminForAccessServices
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -141,7 +144,7 @@ public class OMAGServerAdminForAccessServices
     {
         final String methodName = "configureAccessService";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         VoidResponse response = new VoidResponse();
 
@@ -205,14 +208,14 @@ public class OMAGServerAdminForAccessServices
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
 
 
     /**
-     * Enable all access services that are installed into this server.   The configuration properties
+     * Enable all access services that are registered with this server platform.   The configuration properties
      * for each access service can be changed from their default using setAccessServicesConfig operation.
      *
      * @param userId  user that is issuing the request.
@@ -223,13 +226,13 @@ public class OMAGServerAdminForAccessServices
      * OMAGConfigurationErrorException the event bus has not been configured or
      * OMAGInvalidParameterException invalid serverName parameter.
      */
-    public VoidResponse enableAccessServices(String              userId,
-                                             String              serverName,
-                                             Map<String, Object> accessServiceOptions)
+    public VoidResponse configureAllAccessServices(String              userId,
+                                                   String              serverName,
+                                                   Map<String, Object> accessServiceOptions)
     {
         final String methodName = "enableAccessServices";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         VoidResponse response = new VoidResponse();
 
@@ -305,7 +308,7 @@ public class OMAGServerAdminForAccessServices
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -333,15 +336,13 @@ public class OMAGServerAdminForAccessServices
 
         accessServiceConfig.setAccessServiceOptions(accessServiceOptions);
         accessServiceConfig.setAccessServiceInTopic(
-                connectorConfigurationFactory.getDefaultEventBusConnection(defaultInTopicName,
-                                                                           eventBusConfig.getConnectorProvider(),
+                connectorConfigurationFactory.getDefaultEventBusConnection(eventBusConfig.getConnectorProvider(),
                                                                            eventBusConfig.getTopicURLRoot() + ".server." + serverName,
                                                                            registration.getAccessServiceInTopic(),
                                                                            localServerId,
                                                                            eventBusConfig.getConfigurationProperties()));
         accessServiceConfig.setAccessServiceOutTopic(
-                connectorConfigurationFactory.getDefaultEventBusConnection(defaultOutTopicName,
-                                                                           eventBusConfig.getConnectorProvider(),
+                connectorConfigurationFactory.getDefaultEventBusConnection(eventBusConfig.getConnectorProvider(),
                                                                            eventBusConfig.getTopicURLRoot() + ".server." + serverName,
                                                                            registration.getAccessServiceOutTopic(),
                                                                            localServerId,
@@ -405,12 +406,12 @@ public class OMAGServerAdminForAccessServices
      * OMAGNotAuthorizedException the supplied userId is not authorized to issue this command or
      * OMAGInvalidParameterException invalid serverName  parameter.
      */
-    public VoidResponse disableAccessServices(String          userId,
-                                              String          serverName)
+    public VoidResponse clearAllAccessServices(String          userId,
+                                               String          serverName)
     {
         final String methodName = "disableAccessServices";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         VoidResponse response = new VoidResponse();
 
@@ -438,7 +439,7 @@ public class OMAGServerAdminForAccessServices
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -461,7 +462,7 @@ public class OMAGServerAdminForAccessServices
     {
         final String methodName = "setAccessServicesConfig";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         VoidResponse response = new VoidResponse();
 
@@ -507,7 +508,7 @@ public class OMAGServerAdminForAccessServices
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -551,7 +552,7 @@ public class OMAGServerAdminForAccessServices
     {
         final String methodName = "setEnterpriseAccessConfig";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         VoidResponse response = new VoidResponse();
 
@@ -590,7 +591,7 @@ public class OMAGServerAdminForAccessServices
             {
                 OMRSConfigurationFactory configurationFactory     = new OMRSConfigurationFactory();
 
-                repositoryServicesConfig = configurationFactory.getDefaultRepositoryServicesConfig(serverConfig.getLocalServerName());
+                repositoryServicesConfig = configurationFactory.getDefaultRepositoryServicesConfig();
 
                 repositoryServicesConfig.setEnterpriseAccessConfig(enterpriseAccessConfig);
             }
@@ -611,7 +612,7 @@ public class OMAGServerAdminForAccessServices
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }

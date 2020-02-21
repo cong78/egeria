@@ -14,15 +14,16 @@ import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollec
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceProperties;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 
-import static org.odpi.openmetadata.accessservices.dataplatform.utils.Constants.DATA_PLATFORM_OMAS_NAME;
 import static org.odpi.openmetadata.accessservices.dataplatform.utils.Constants.DATA_PLATFORM_USER_ID;
-import static org.odpi.openmetadata.accessservices.dataplatform.utils.SoftwareServerCapabilityMapper.*;
+import static org.odpi.openmetadata.accessservices.dataplatform.mappers.SoftwareServerCapabilityMapper.*;
 
 
 /**
- * The type Registration handler.
+ * DataPlatformRegistrationHandler manages SoftwareServerCapability objects from external data platforms. It runs
+ * server-side in the DataPlatform OMAS and creates software server capability entities through the
+ * OMRSRepositoryConnector.
  */
-public class RegistrationHandler {
+public class DataPlatformRegistrationHandler {
 
     private String serviceName;
     private OMRSRepositoryHelper repositoryHelper;
@@ -37,7 +38,7 @@ public class RegistrationHandler {
      * @param repositoryHandler       the repository handler
      * @param invalidParameterHandler the invalid parameter handler
      */
-    public RegistrationHandler(String serviceName, OMRSRepositoryHelper repositoryHelper, RepositoryHandler repositoryHandler, InvalidParameterHandler invalidParameterHandler) {
+    public DataPlatformRegistrationHandler(String serviceName, OMRSRepositoryHelper repositoryHelper, RepositoryHandler repositoryHandler, InvalidParameterHandler invalidParameterHandler) {
         this.serviceName = serviceName;
         this.repositoryHelper = repositoryHelper;
         this.repositoryHandler = repositoryHandler;
@@ -65,9 +66,9 @@ public class RegistrationHandler {
 
         InstanceProperties softwareServerProperties = new EntityPropertiesBuilder()
                 .withStringProperty(QUALIFIED_NAME_PROPERTY_NAME, qualifiedNameForSoftwareServer)
-                .withStringProperty(PATCH_LEVEL__PROPERTY_NAME, softwareServerCapability.getPatchLevel())
+                .withStringProperty(PATCH_LEVEL_PROPERTY_NAME, softwareServerCapability.getPatchLevel())
                 .withStringProperty(TYPE_PROPERTY_NAME, softwareServerCapability.getDataPlatformType())
-                .withStringProperty(VERSION__PROPERTY_NAME, softwareServerCapability.getDataPlatformVersion())
+                .withStringProperty(VERSION_PROPERTY_NAME, softwareServerCapability.getDataPlatformVersion())
                 .withStringProperty(SOURCE_PROPERTY_NAME, softwareServerCapability.getSource())
                 .withStringProperty(NAME_PROPERTY_NAME, softwareServerCapability.getDisplayName())
                 .withStringProperty(Constants.DESCRIPTION, softwareServerCapability.getDescription())
@@ -92,7 +93,7 @@ public class RegistrationHandler {
      * @throws UserNotAuthorizedException the user not authorized exception
      * @throws PropertyServerException    the property server exception
      */
-    public SoftwareServerCapability getSoftwareServerCapabilityByQualifiedName(String userId, String qualifiedName) throws InvalidParameterException,UserNotAuthorizedException, PropertyServerException {
+    public String getSoftwareServerCapabilityByQualifiedName(String userId, String qualifiedName) throws InvalidParameterException, UserNotAuthorizedException, PropertyServerException {
 
         final String methodName = "getExternalDataPlatformByQualifiedName";
 
@@ -114,18 +115,6 @@ public class RegistrationHandler {
                 repositoryHelper.getTypeDefByName(DATA_PLATFORM_USER_ID,SOFTWARE_SERVER_CAPABILITY_TYPE_NAME).getGUID(),
                 SOFTWARE_SERVER_CAPABILITY_TYPE_NAME,
                 methodName);
-        return buildSoftwareServerCapabilitySource(entity);
-    }
-
-    private SoftwareServerCapability buildSoftwareServerCapabilitySource(EntityDetail entity) {
-        String methodName= "buildSoftwareServerCapabilitySource";
-        SoftwareServerCapability softwareServerCapability = new SoftwareServerCapability();
-        softwareServerCapability.setDisplayName(repositoryHelper.getStringProperty(DATA_PLATFORM_OMAS_NAME, NAME_PROPERTY_NAME, entity.getProperties(),  methodName));
-        softwareServerCapability.setQualifiedName(repositoryHelper.getStringProperty(DATA_PLATFORM_OMAS_NAME, QUALIFIED_NAME_PROPERTY_NAME, entity.getProperties(),  methodName));
-        softwareServerCapability.setDataPlatformVersion(repositoryHelper.getStringProperty(DATA_PLATFORM_OMAS_NAME, VERSION__PROPERTY_NAME, entity.getProperties(),  methodName));
-        softwareServerCapability.setPatchLevel(repositoryHelper.getStringProperty(DATA_PLATFORM_OMAS_NAME,PATCH_LEVEL__PROPERTY_NAME, entity.getProperties(),  methodName));
-        softwareServerCapability.setDataPlatformType(repositoryHelper.getStringProperty(Constants.DATA_PLATFORM_OMAS_NAME, TYPE_PROPERTY_NAME, entity.getProperties(),  methodName));
-        softwareServerCapability.setDescription(repositoryHelper.getStringProperty(DATA_PLATFORM_OMAS_NAME, Constants.DESCRIPTION, entity.getProperties(),  methodName));
-        return softwareServerCapability;
+        return entity.getGUID();
     }
 }

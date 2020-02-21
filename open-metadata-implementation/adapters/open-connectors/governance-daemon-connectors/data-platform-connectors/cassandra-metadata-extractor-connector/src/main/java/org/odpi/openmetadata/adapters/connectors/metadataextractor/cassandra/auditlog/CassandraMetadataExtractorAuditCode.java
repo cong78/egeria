@@ -39,7 +39,7 @@ public enum CassandraMetadataExtractorAuditCode {
             "The address of the cassandra cluster is not valid.",
             "The local server is unable to create a connector.",
             "Check if the address of the cassandra cluster is valid"),
-    CONNECTOR_KEYSPACE_ERROR("CASSANDRA-METADATA-EXTRACTOR-CONNECTOR-0006.",
+    CONNECTOR_CASSANDRA_KEYSPACE_ERROR("CASSANDRA-METADATA-EXTRACTOR-CONNECTOR-0006.",
             OMRSAuditLogRecordSeverity.EXCEPTION,
             "The name of the Keyspace is not valid ",
             "The local server is unable to create a connector.",

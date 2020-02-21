@@ -3,7 +3,6 @@
 
 package org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra;
 
-import org.odpi.openmetadata.adapters.connectors.datastore.cassandra.CassandraDataStoreConnector;
 import org.odpi.openmetadata.dataplatformservices.api.DataPlatformMetadataExtractorProvider;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.ConnectorType;
 
@@ -24,7 +23,7 @@ public class CassandraMetadataExtractorProvider extends DataPlatformMetadataExtr
     public CassandraMetadataExtractorProvider() {
 
         super();
-        Class    connectorClass = CassandraDataStoreConnector.class;
+        Class connectorClass = CassandraMetadataExtractorProvider.class;
 
         super.setConnectorClassName(connectorClass.getName());
 

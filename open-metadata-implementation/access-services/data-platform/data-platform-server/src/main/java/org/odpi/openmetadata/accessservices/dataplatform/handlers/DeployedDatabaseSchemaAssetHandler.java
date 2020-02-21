@@ -81,14 +81,13 @@ public class DeployedDatabaseSchemaAssetHandler {
 
 
     /**
-     * Create deployed database schema asset.
+     * Create deployed database schema asset
      *
-     * @param event the event
      * @throws PropertyServerException    the property server exception
      * @throws UserNotAuthorizedException the user not authorized exception
      * @throws InvalidParameterException  the invalid parameter exception
      */
-    public void createDeployedDatabaseSchemaAsset(NewDeployedDatabaseSchemaEvent event) throws
+    public void createDeployedDatabaseSchemaAsset(DeployedDatabaseSchema deployedDatabaseSchema) throws
             PropertyServerException,
             org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException,
             InvalidParameterException {

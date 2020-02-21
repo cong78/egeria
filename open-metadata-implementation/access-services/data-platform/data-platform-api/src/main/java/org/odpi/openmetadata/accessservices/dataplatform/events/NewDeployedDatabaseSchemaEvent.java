@@ -27,7 +27,6 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 public class NewDeployedDatabaseSchemaEvent extends DataPlatformEventHeader {
 
     private DeployedDatabaseSchema deployedDatabaseSchema;
-    private DataPlatform dataPlatform;
 
     /**
      * Gets deployed database schema.
@@ -47,43 +46,23 @@ public class NewDeployedDatabaseSchemaEvent extends DataPlatformEventHeader {
         this.deployedDatabaseSchema = deployedDatabaseSchema;
     }
 
-    /**
-     * Gets data platform.
-     *
-     * @return the data platform
-     */
-    public DataPlatform getDataPlatform() {
-        return dataPlatform;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NewDeployedDatabaseSchemaEvent that = (NewDeployedDatabaseSchemaEvent) o;
+        return Objects.equals(deployedDatabaseSchema, that.deployedDatabaseSchema);
     }
 
-    /**
-     * Sets data platform.
-     *
-     * @param dataPlatform the data platform
-     */
-    public void setDataPlatform(DataPlatform dataPlatform) {
-        this.dataPlatform = dataPlatform;
+    @Override
+    public int hashCode() {
+        return Objects.hash(deployedDatabaseSchema);
     }
 
     @Override
     public String toString() {
         return "NewDeployedDatabaseSchemaEvent{" +
                 "deployedDatabaseSchema=" + deployedDatabaseSchema +
-                ", dataPlatform=" + dataPlatform +
-                "} " + super.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        NewDeployedDatabaseSchemaEvent that = (NewDeployedDatabaseSchemaEvent) o;
-        return Objects.equals(deployedDatabaseSchema, that.deployedDatabaseSchema) &&
-                Objects.equals(dataPlatform, that.dataPlatform);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(deployedDatabaseSchema, dataPlatform);
+                '}';
     }
 }

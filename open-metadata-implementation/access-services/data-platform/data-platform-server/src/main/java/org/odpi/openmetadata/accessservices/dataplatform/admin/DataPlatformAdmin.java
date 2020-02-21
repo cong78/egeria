@@ -49,21 +49,21 @@ public class DataPlatformAdmin extends AccessServiceAdmin
     /**
      * Initialize the access service.
      *
-     * @param accessServiceConfig specific configuration properties for this access service.
-     * @param enterpriseOMRSTopicConnector         connector for receiving OMRS Events from the cohorts
-     * @param enterpriseConnector                  connector for querying the cohort repositories
-     * @param auditLog                             audit log component for logging messages.
-     * @param serverUserName                       user id to use on OMRS calls where there is no end user.
+     * @param accessServiceConfig          specific configuration properties for this access service.
+     * @param enterpriseOMRSTopicConnector connector for receiving OMRS Events from the cohorts
+     * @param repositoryConnector          connector for querying the cohort repositories
+     * @param auditLog                     audit log component for logging messages.
+     * @param serverUserName               user id to use on OMRS calls where there is no end user.
      * @throws OMAGConfigurationErrorException invalid parameters in the configuration properties.
      */
     @Override
     public void initialize(AccessServiceConfig accessServiceConfig,
                            OMRSTopicConnector enterpriseOMRSTopicConnector,
-                           OMRSRepositoryConnector enterpriseConnector,
+                           OMRSRepositoryConnector repositoryConnector,
                            OMRSAuditLog auditLog,
                            String serverUserName) throws OMAGConfigurationErrorException {
 
-        final String actionDescription = "Initialize Data Platform OMAS server.";
+        final String actionDescription = "Initialize Data Platform OMAS";
 
         DataPlatformAuditCode auditCode;
         auditCode = DataPlatformAuditCode.SERVICE_INITIALIZING;
@@ -79,24 +79,31 @@ public class DataPlatformAdmin extends AccessServiceAdmin
             this.auditLog = auditLog;
 
             List<String> supportedZones = this.extractSupportedZones(accessServiceConfig.getAccessServiceOptions(),
-                                                                     accessServiceConfig.getAccessServiceName(),
-                                                                     auditLog);
+                    accessServiceConfig.getAccessServiceName(),
+                    auditLog);
 
-            this.instance = new DataPlatformServicesInstance(enterpriseConnector, supportedZones, auditLog);
+            List<String> defaultZones = this.extractDefaultZones(accessServiceConfig.getAccessServiceOptions(),
+                    accessServiceConfig.getAccessServiceName(),
+                    auditLog);
 
-            this.serverName=instance.getServerName();
+            this.instance = new DataPlatformServicesInstance(repositoryConnector, supportedZones, defaultZones, auditLog, serverUserName,
+                    repositoryConnector.getMaxPageSize());
 
-            String inTopicName = getTopicName(accessServiceConfig.getAccessServiceInTopic());
-            dataPlatformInTopicConnector = initializeDataPlatformTopicConnector(accessServiceConfig.getAccessServiceInTopic());
+            this.serverName = instance.getServerName();
 
-            OMEntityDao omEntityDao = new OMEntityDao(enterpriseConnector, supportedZones, auditLog);
+            OMEntityDao omEntityDao = new OMEntityDao(repositoryConnector, supportedZones, auditLog);
 
-            if (dataPlatformInTopicConnector != null) {
-                OpenMetadataTopicListener dataPlatformInTopicListener = new DataPlatformInTopicListener(instance, omEntityDao, auditLog, enterpriseConnector.getRepositoryHelper());
-                this.dataPlatformInTopicConnector.registerListener(dataPlatformInTopicListener);
-                startConnector(DataPlatformAuditCode.SERVICE_REGISTERED_WITH_DP_IN_TOPIC, actionDescription, inTopicName, dataPlatformInTopicConnector);
+            if (accessServiceConfig.getAccessServiceInTopic() != null) {
+
+                String inTopicName = getTopicName(accessServiceConfig.getAccessServiceInTopic());
+                dataPlatformInTopicConnector = initializeDataPlatformTopicConnector(accessServiceConfig.getAccessServiceInTopic());
+
+                if (dataPlatformInTopicConnector != null) {
+                    OpenMetadataTopicListener dataPlatformInTopicListener = new DataPlatformInTopicListener(instance, omEntityDao, auditLog, repositoryConnector.getRepositoryHelper());
+                    this.dataPlatformInTopicConnector.registerListener(dataPlatformInTopicListener);
+                    startConnector(DataPlatformAuditCode.SERVICE_REGISTERED_WITH_DP_IN_TOPIC, actionDescription, inTopicName, dataPlatformInTopicConnector);
+                }
             }
-
 
             auditCode = DataPlatformAuditCode.SERVICE_INITIALIZED;
             auditLog.logRecord(actionDescription,
@@ -200,11 +207,12 @@ public class DataPlatformAdmin extends AccessServiceAdmin
             topicConnector.setAuditLog(auditLog.createNewAuditLog(OMRSAuditingComponent.OPEN_METADATA_TOPIC_CONNECTOR));
 
             return topicConnector;
+
         } catch (Throwable error) {
             String methodName = "getTopicConnector";
 
             if (log.isDebugEnabled()) {
-                log.debug("Unable to create topic connector: " + error.toString());
+                log.debug("Unable to create topic connector: ", error);
             }
 
             OMRSErrorCode errorCode = OMRSErrorCode.NULL_TOPIC_CONNECTOR;

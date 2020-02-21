@@ -168,7 +168,7 @@ public class ClassificationHandler {
                 lineageEntity.setUpdateTime(classification.getUpdateTime());
                 lineageEntity.setProperties(converter.getMapProperties(classification.getProperties()));
 
-                log.debug("Classfication mapping for lineage entity {}: ", lineageEntity);
+                log.debug("Classification mapping for lineage entity {}: ", lineageEntity);
 
             } catch (Throwable exc) {
 

@@ -4,7 +4,7 @@ package org.odpi.openmetadata.accessservices.dataplatform.server;
 
 import org.odpi.openmetadata.accessservices.dataplatform.handlers.DeployedDatabaseSchemaAssetHandler;
 import org.odpi.openmetadata.accessservices.dataplatform.properties.SoftwareServerCapability;
-import org.odpi.openmetadata.accessservices.dataplatform.handlers.RegistrationHandler;
+import org.odpi.openmetadata.accessservices.dataplatform.handlers.DataPlatformRegistrationHandler;
 import org.odpi.openmetadata.accessservices.dataplatform.properties.DeployedDatabaseSchema;
 import org.odpi.openmetadata.accessservices.dataplatform.responses.DataPlatformRegistrationRequestBody;
 import org.odpi.openmetadata.accessservices.dataplatform.responses.DeployedDatabaseSchemaRequestBody;
@@ -58,7 +58,7 @@ public class DataPlatformRestServices {
                 restExceptionHandler.handleNoRequestBody(userId, methodName, serverName);
                 return response;
             }
-            RegistrationHandler handler = dataPlatformInstanceHandler.getRegistrationHandler(userId, serverName, methodName);
+            DataPlatformRegistrationHandler handler = dataPlatformInstanceHandler.getRegistrationHandler(userId, serverName, methodName);
             SoftwareServerCapability softwareServerCapability = dataPlatformRegistrationRequestBody.getSoftwareServerCapability();
             response.setGUID(handler.createSoftwareServerCapability(softwareServerCapability));
 
@@ -84,15 +84,15 @@ public class DataPlatformRestServices {
      * @param qualifiedName qualified name of the server
      * @return the unique identifier from a software server capability definition
      */
-    public DataPlatformRegistrationRequestBody getExternalDataPlatformByQualifiedName(String serverName, String userId, String qualifiedName) {
+    public GUIDResponse getExternalDataPlatformByQualifiedName(String serverName, String userId, String qualifiedName) {
 
         final String methodName = "getExternalDataPlatformByQualifiedName";
-        DataPlatformRegistrationRequestBody response = new DataPlatformRegistrationRequestBody();
+        GUIDResponse response = new GUIDResponse();
 
         try {
-            RegistrationHandler handler = dataPlatformInstanceHandler.getRegistrationHandler(userId, serverName, methodName);
+            DataPlatformRegistrationHandler handler = dataPlatformInstanceHandler.getRegistrationHandler(userId, serverName, methodName);
 
-            response.setSoftwareServerCapability(handler.getSoftwareServerCapabilityByQualifiedName(userId, qualifiedName));
+            response.setGUID(handler.getSoftwareServerCapabilityByQualifiedName(userId, qualifiedName));
 
         } catch (InvalidParameterException error) {
             dataPlatformInstanceHandler.getExceptionHandler().captureInvalidParameterException(response, error);

@@ -91,17 +91,14 @@ public class CassandraDataStoreConnector extends ConnectorBase {
 
 
     /**
-     * Set up the Cassandra Cluster Connection with schema change listener to track the metadata changes
-     *
-     * @param schemaChangeListener the schema change listener
+     * Set up the Cassandra Cluster Connection
      */
-    public void startCassandraConnection(SchemaChangeListener schemaChangeListener) {
+    public void startCassandraConnection() {
 
         String actionDescription = "start Cassandra Data Store Connection";
         try {
             CqlSessionBuilder builder = CqlSession.builder();
             builder.addContactPoint(new InetSocketAddress(serverAddresses, Integer.valueOf(port)));
-            builder.withSchemaChangeListener(schemaChangeListener);
             builder.withAuthCredentials(username, password);
             this.cqlSession = builder.build();
 

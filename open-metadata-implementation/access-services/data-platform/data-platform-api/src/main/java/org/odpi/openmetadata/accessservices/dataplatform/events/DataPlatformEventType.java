@@ -17,22 +17,21 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
  * Events are limited to assets that are in the zones listed in the supportedZones property
  * passed to the Data Platform OMAS at start up (a null value here means all zones).
  */
-@JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
+@JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
-public enum DataPlatformEventType implements Serializable
-{
-    UNKNOWN_DATA_PLATFORM_EVENT         (0,  "Unknown Event",  "An event that is not recognized by the local server."),
-    NEW_INFORMATION_VIEW_EVENT          (1,  "New View Event", "An new information view asset has been added to one of the access point zones."),
-    NEW_DEPLOYED_DB_SCHEMA_EVENT        (2,  "New Deployed Database Schema Event", "An new deployed database schema asset has been added to one of the access point zones. "),
-    NEW_TABULAR_SCHEMA_EVENT            (3,  "New Tabular Schema Event", "An new tabular schema has been added to one of the access point zones. "),
-    NEW_TABULAR_COLUMN_EVENT            (4,  "New Tabular Column Event", "An new tabular column schema asset has been added to one of the access point zones. ");
+@JsonIgnoreProperties(ignoreUnknown = true)
+public enum DataPlatformEventType implements Serializable {
+    UNKNOWN_DATA_PLATFORM_EVENT(0, "UnknownEvent", "An event that is not recognized by the local server."),
+    NEW_VIEW_EVENT(1, "NewViewEvent", "An new information view asset has been added to one of the access point zones."),
+    NEW_DEPLOYED_DB_SCHEMA_EVENT(2, "NewDeployedDatabaseSchemaEvent", "An new deployed database schema asset has been added to one of the access point zones. "),
+    NEW_TABULAR_SCHEMA_EVENT(3, "NewTabularColumnEvent", "An new tabular schema has been added to one of the access point zones. "),
+    NEW_TABULAR_COLUMN_EVENT(4, "NewTabularSchemaEvent", "An new tabular column schema attribute has been added to one of the access point zones. ");
 
-    private static final long     serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    private  int      eventTypeCode;
-    private  String   eventTypeName;
-    private  String   eventTypeDescription;
+    private int eventTypeCode;
+    private String eventTypeName;
+    private String eventTypeDescription;
 
 
     /**

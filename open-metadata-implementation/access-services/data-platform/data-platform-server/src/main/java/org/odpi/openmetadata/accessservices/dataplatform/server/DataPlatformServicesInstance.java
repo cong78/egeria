@@ -4,7 +4,8 @@ package org.odpi.openmetadata.accessservices.dataplatform.server;
 
 import org.odpi.openmetadata.accessservices.dataplatform.ffdc.DataPlatformErrorCode;
 import org.odpi.openmetadata.accessservices.dataplatform.handlers.DeployedDatabaseSchemaAssetHandler;
-import org.odpi.openmetadata.accessservices.dataplatform.handlers.RegistrationHandler;
+import org.odpi.openmetadata.accessservices.dataplatform.handlers.DataPlatformRegistrationHandler;
+import org.odpi.openmetadata.accessservices.dataplatform.handlers.InformationViewAssetHandler;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
 import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstance;
 import org.odpi.openmetadata.commonservices.multitenant.ffdc.exceptions.NewInstanceException;
@@ -14,14 +15,16 @@ import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollec
 import java.util.List;
 
 /**
- * The type Data platform services instance.
+ * DataPlatformServicesInstance caches references to objects for a specific server.
+ * It is also responsible for registering itself in the instance map.
  */
 public class DataPlatformServicesInstance extends OCFOMASServiceInstance {
 
     private static AccessServiceDescription myDescription = AccessServiceDescription.DATA_PLATFORM_OMAS;
 
-    private RegistrationHandler registrationHandler;
+    private DataPlatformRegistrationHandler dataPlatformRegistrationHandler;
     private DeployedDatabaseSchemaAssetHandler deployedDatabaseSchemaAssetHandler;
+    private InformationViewAssetHandler informationViewAssetHandler;
 
 
     /**
@@ -32,18 +35,25 @@ public class DataPlatformServicesInstance extends OCFOMASServiceInstance {
      * @param auditLog            logging destination
      * @throws NewInstanceException a problem occurred during initialization
      */
-    public DataPlatformServicesInstance(OMRSRepositoryConnector repositoryConnector, List<String> supportedZones, OMRSAuditLog auditLog) throws NewInstanceException {
+    public DataPlatformServicesInstance(OMRSRepositoryConnector repositoryConnector,
+                                        List<String> supportedZones,
+                                        List<String> defaultZones,
+                                        OMRSAuditLog auditLog,
+                                        String localServerUserId,
+                                        int maxPageSize) throws NewInstanceException {
+
         super(myDescription.getAccessServiceFullName(),
                 repositoryConnector,
                 supportedZones,
-                null,
-                auditLog);
+                defaultZones,
+                auditLog,
+                localServerUserId,
+                maxPageSize);
 
         final String methodName = "new ServiceInstance";
 
-        if (repositoryHandler != null)
-        {
-            registrationHandler = new RegistrationHandler(
+        if (repositoryHandler != null) {
+            dataPlatformRegistrationHandler = new DataPlatformRegistrationHandler(
                     serverName,
                     repositoryHelper,
                     repositoryHandler,
@@ -53,14 +63,17 @@ public class DataPlatformServicesInstance extends OCFOMASServiceInstance {
                     serverName,
                     repositoryHelper,
                     repositoryHandler,
+                    invalidParameterHandler);
+            informationViewAssetHandler = new InformationViewAssetHandler(
+                    serverName,
+                    repositoryHelper,
+                    repositoryHandler,
                     invalidParameterHandler
             );
-        }
+        } else {
 
-        else
-        {
-            DataPlatformErrorCode errorCode    = DataPlatformErrorCode.OMRS_NOT_INITIALIZED;
-            String                 errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
+            DataPlatformErrorCode errorCode = DataPlatformErrorCode.OMRS_NOT_INITIALIZED;
+            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
 
             throw new NewInstanceException(errorCode.getHTTPErrorCode(),
                     this.getClass().getName(),
@@ -85,8 +98,8 @@ public class DataPlatformServicesInstance extends OCFOMASServiceInstance {
      *
      * @return the registration handler
      */
-    public RegistrationHandler getRegistrationHandler() {
-        return registrationHandler;
+    public DataPlatformRegistrationHandler getDataPlatformRegistrationHandler() {
+        return dataPlatformRegistrationHandler;
     }
 
 
@@ -94,4 +107,7 @@ public class DataPlatformServicesInstance extends OCFOMASServiceInstance {
         return deployedDatabaseSchemaAssetHandler;
     }
 
+    public InformationViewAssetHandler getInformationViewAssetHandler() {
+        return informationViewAssetHandler;
+    }
 }

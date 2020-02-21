@@ -21,7 +21,7 @@ to the Data Platform OMAS.
           "class": "DataPlatformServicesConfig",
           "dataPlatformGUID": "296bc645-2043-499c-bcd9-ecff90e46899",
           "dataPlatformServerURL":"127.0.0.1",
-          "dataPlatformServerName":"ING Cassandra Hotel",
+          "dataPlatformServerName":"Cassandra Data Platform",
           "dataPlatformConnectionProvider": "org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.CassandraMetadataExtractorProvider",
           "dataPlatformConnection":{
             "class": "Connection",

@@ -49,6 +49,9 @@ public class CassandraMetadataListener implements SchemaChangeListener {
 
             dataPlatformClient.createDeployedDatabaseSchema(userId, deployedDatabaseSchema);
         } catch (InvalidParameterException | PropertyServerException | UserNotAuthorizedException | NullPointerException e){
+
+            log.error("Error in creating Cassandra Keyspace as an Deployed Database Schema asset", e);
+
             auditLog = CassandraMetadataExtractorAuditCode.CONNECTOR_CREATING_KEYSPACE;
             omrsAuditLog.logRecord(
                     actionDescription,

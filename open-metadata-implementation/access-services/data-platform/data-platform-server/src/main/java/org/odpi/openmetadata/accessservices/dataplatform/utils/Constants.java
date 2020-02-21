@@ -4,9 +4,14 @@ package org.odpi.openmetadata.accessservices.dataplatform.utils;
 
 public class Constants {
 
+    //Data Platform OMAS Constands
     public static final String DATA_PLATFORM_OMAS_NAME = "DataPlatformOmas";
     public static final String DATA_PLATFORM = "DataPlatform";
     public static final String DATA_PLATFORM_USER_ID = "dataPlatformOmas";
+    public static final String ZONE_MEMBERSHIP = "zoneMembership";
+    public static final String USER_ID = "dataPlatformOmas";
+
+
     public static final String RELATIONAL_TABLE = "RelationalTable";
     public static final String RELATIONAL_COLUMN = "RelationalColumn";
     public static final String BUSINESS_TERM = "GlossaryTerm";
@@ -44,7 +49,7 @@ public class Constants {
     public static final String NETWORK_ADDRESS = "networkAddress";
     public static final String ADDITIONAL_PROPERTIES = "additionalProperties";
     public static final String CONNECTOR_PROVIDER_CLASSNAME = "connectorProviderClassName";
-    public static final String USER_ID = "dataPlatformOmas";
+
     public static final String CONNECTOR_TYPE = "ConnectorType";
     public static final String DEPLOYED_DATABASE_SCHEMA = "DeployedDatabaseSchema";
     public static final String ENDPOINT = "Endpoint";
@@ -52,7 +57,9 @@ public class Constants {
     public static final String SOFTWARE_SERVER = "SoftwareServer";
     public static final String DATABASE_SERVER = "DatabaseServer";
     public static final String SERVER_ENDPOINT = "ServerEndpoint";
-    public static final String ZONE_MEMBERSHIP = "zoneMembership";
+
     public static final int START_FROM = 0;
     public static final Integer PAGE_SIZE = 100;
+
+
 }

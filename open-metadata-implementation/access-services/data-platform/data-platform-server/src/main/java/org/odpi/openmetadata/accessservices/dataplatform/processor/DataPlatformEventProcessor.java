@@ -44,10 +44,8 @@ public class DataPlatformEventProcessor {
         log.debug(DEBUG_MESSAGE_METHOD, methodName);
         try {
             NewViewEvent newViewEvent = OBJECT_MAPPER.readValue(dataPlatformEvent, NewViewEvent.class);
-            InformationViewAsset informationViewAsset = new InformationViewAsset();
-
             InformationViewAssetHandler handler = dataPlatformInstanceHandler.getInformationViewAssetHandler(Constants.USER_ID, serverName, methodName);
-            handler.createInformationViewAsset(newViewEvent, informationViewAsset);
+            handler.createInformationViewAsset(newViewEvent);
 
 
         } catch (JsonProcessingException | UserNotAuthorizedException | PropertyServerException | InvalidParameterException e) {

@@ -2,57 +2,51 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.dataplatform.properties;
 
-import org.odpi.openmetadata.accessservices.dataplatform.properties.Source;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.ConnectorType;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Endpoint;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
- * DataPlatform defines an endpoint and connectors for the runtime environment for a collection of data assets.
+ * DataPlatform defines an OCF connection object with endpoint and connectors as well as the external source ID for a collection of data assets.
  */
-public class DataPlatform extends Source
-{
-    /*
-     * Lists of objects that make up the infrastructure for the asset.
-     */
-    private String                 name = null;
-    private Endpoint               dataPlatformEndpoint  = null;
-    private List<ConnectorType>    dataPlatformConnectorType = null;
+public class DataPlatform extends Source implements Serializable {
+    private String externalSourceGuid = null;
+    private String externalSourceName = null;
+    private Connection connection = null;
 
-    public String getName() {
-        return name;
+    public String getExternalSourceGuid() {
+        return externalSourceGuid;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setExternalSourceGuid(String externalSourceGuid) {
+        this.externalSourceGuid = externalSourceGuid;
     }
 
-    public Endpoint getDataPlatformEndpoint() {
-        return dataPlatformEndpoint;
+    public String getExternalSourceName() {
+        return externalSourceName;
     }
 
-    public void setDataPlatformEndpoint(Endpoint dataPlatformEndpoint) {
-        this.dataPlatformEndpoint = dataPlatformEndpoint;
+    public void setExternalSourceName(String externalSourceName) {
+        this.externalSourceName = externalSourceName;
     }
 
-    public List<ConnectorType> getDataPlatformConnectorType() {
-        return dataPlatformConnectorType;
+    public Connection getConnection() {
+        return connection;
     }
 
-    public void setDataPlatformConnectorType(List<ConnectorType> dataPlatformConnectorType) {
-        this.dataPlatformConnectorType = dataPlatformConnectorType;
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 
     @Override
     public String toString() {
         return "DataPlatform{" +
-                "name='" + name + '\'' +
-                ", dataPlatformEndpoint=" + dataPlatformEndpoint +
-                ", dataPlatformConnectorType=" + dataPlatformConnectorType +
+                "externalSourceGuid='" + externalSourceGuid + '\'' +
+                ", externalSourceName='" + externalSourceName + '\'' +
+                ", connection=" + connection +
                 ", additionalProperties=" + additionalProperties +
                 ", qualifiedName='" + qualifiedName + '\'' +
                 ", guid='" + guid + '\'' +
-                "} " + super.toString();
+                '}';
     }
 }

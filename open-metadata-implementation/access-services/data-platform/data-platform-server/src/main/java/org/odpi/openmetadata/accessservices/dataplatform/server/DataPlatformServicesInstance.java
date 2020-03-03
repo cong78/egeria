@@ -65,7 +65,8 @@ public class DataPlatformServicesInstance extends OCFOMASServiceInstance {
                     repositoryHandler,
                     invalidParameterHandler);
             informationViewAssetHandler = new InformationViewAssetHandler(
-                    serverName,
+                    serviceName,
+                    auditLog,
                     repositoryHelper,
                     repositoryHandler,
                     invalidParameterHandler

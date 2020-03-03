@@ -3,9 +3,8 @@
 package org.odpi.openmetadata.accessservices.dataplatform.admin;
 
 import org.odpi.openmetadata.accessservices.dataplatform.auditlog.DataPlatformAuditCode;
-import org.odpi.openmetadata.accessservices.dataplatform.contentmanager.OMEntityDao;
-import org.odpi.openmetadata.accessservices.dataplatform.ffdc.DataPlatformErrorCode;
 import org.odpi.openmetadata.accessservices.dataplatform.listeners.DataPlatformInTopicListener;
+import org.odpi.openmetadata.accessservices.dataplatform.processor.DataPlatformEventProcessor;
 import org.odpi.openmetadata.accessservices.dataplatform.server.DataPlatformServicesInstance;
 import org.odpi.openmetadata.adminservices.configuration.properties.AccessServiceConfig;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceAdmin;
@@ -14,7 +13,6 @@ import org.odpi.openmetadata.frameworks.connectors.ConnectorBroker;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLogRecordSeverity;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditingComponent;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.openmetadatatopic.OpenMetadataTopicConnector;
@@ -91,15 +89,13 @@ public class DataPlatformAdmin extends AccessServiceAdmin
 
             this.serverName = instance.getServerName();
 
-            OMEntityDao omEntityDao = new OMEntityDao(repositoryConnector, supportedZones, auditLog);
-
             if (accessServiceConfig.getAccessServiceInTopic() != null) {
 
                 String inTopicName = getTopicName(accessServiceConfig.getAccessServiceInTopic());
                 dataPlatformInTopicConnector = initializeDataPlatformTopicConnector(accessServiceConfig.getAccessServiceInTopic());
 
                 if (dataPlatformInTopicConnector != null) {
-                    OpenMetadataTopicListener dataPlatformInTopicListener = new DataPlatformInTopicListener(instance, omEntityDao, auditLog, repositoryConnector.getRepositoryHelper());
+                    OpenMetadataTopicListener dataPlatformInTopicListener = new DataPlatformInTopicListener(auditLog, new DataPlatformEventProcessor(auditLog, serverName));
                     this.dataPlatformInTopicConnector.registerListener(dataPlatformInTopicListener);
                     startConnector(DataPlatformAuditCode.SERVICE_REGISTERED_WITH_DP_IN_TOPIC, actionDescription, inTopicName, dataPlatformInTopicConnector);
                 }

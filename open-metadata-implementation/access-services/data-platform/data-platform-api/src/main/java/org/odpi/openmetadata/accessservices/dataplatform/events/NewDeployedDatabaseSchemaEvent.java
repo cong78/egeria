@@ -47,19 +47,6 @@ public class NewDeployedDatabaseSchemaEvent extends DataPlatformEventHeader {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        NewDeployedDatabaseSchemaEvent that = (NewDeployedDatabaseSchemaEvent) o;
-        return Objects.equals(deployedDatabaseSchema, that.deployedDatabaseSchema);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(deployedDatabaseSchema);
-    }
-
-    @Override
     public String toString() {
         return "NewDeployedDatabaseSchemaEvent{" +
                 "deployedDatabaseSchema=" + deployedDatabaseSchema +

@@ -47,9 +47,9 @@ public class DataPlatformOMASResource {
      * @return the software server capability by qualified name
      */
     @GetMapping(path = "/software-server-capability/{qualifiedName}")
-    public DataPlatformRegistrationRequestBody getExternalDataPlatformByQualifiedName(@PathVariable String serverName,
-                                                                                      @PathVariable String userId,
-                                                                                      @PathVariable String qualifiedName) {
+    public GUIDResponse getExternalDataPlatformByQualifiedName(@PathVariable String serverName,
+                                                               @PathVariable String userId,
+                                                               @PathVariable String qualifiedName) {
         return restAPI.getExternalDataPlatformByQualifiedName(serverName, userId, qualifiedName);
     }
 

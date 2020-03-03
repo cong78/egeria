@@ -3,6 +3,7 @@
 package org.odpi.openmetadata.accessservices.dataplatform.handlers;
 
 import org.odpi.openmetadata.accessservices.dataplatform.events.NewViewEvent;
+import org.odpi.openmetadata.accessservices.dataplatform.ffdc.DataPlatformErrorCode;
 import org.odpi.openmetadata.accessservices.dataplatform.properties.BusinessTerm;
 import org.odpi.openmetadata.accessservices.dataplatform.properties.DerivedColumn;
 import org.odpi.openmetadata.accessservices.dataplatform.properties.TableSource;
@@ -15,6 +16,7 @@ import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterExceptio
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLogRecordSeverity;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 import org.slf4j.Logger;
@@ -55,16 +57,9 @@ public class InformationViewAssetHandler {
         if (event.getDerivedColumns().isEmpty() || event.getDerivedColumns() == null) {
             log.debug("Delete existing view as event received has no derived columns");
 
-           /* DataPlatformErrorCode auditCode = DataPlatformErrorCode.;
-            auditLog.logRecord(actionDescription,
-                    auditCode.getLogMessageId(),
-                    auditCode.getSeverity(),
-                    auditCode.getFormattedLogMessage("Empty or null derived column value in new view event."),
-                    null,
-                    auditCode.getSystemAction(),
-                    auditCode.getUserAction());*/
         } else {
             createInformationViewAsset(event.getTableSource());
+            createInformationView(event.getDerivedColumns(), event.getTableSource(), event.getOriginalTableSource());
         }
 
     }

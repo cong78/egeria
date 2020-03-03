@@ -76,8 +76,8 @@ public class DataPlatformRegistrationHandler {
 
         return repositoryHandler.createEntity(
                 DATA_PLATFORM_USER_ID,
-                repositoryHelper.getTypeDefByName(DATA_PLATFORM_USER_ID,SOFTWARE_SERVER_CAPABILITY_TYPE_NAME).getGUID(),
-                SOFTWARE_SERVER_CAPABILITY_TYPE_NAME,
+                repositoryHelper.getTypeDefByName(DATA_PLATFORM_USER_ID, SOFTWARE_SERVER_CAPABILITY_ENTITY_NAME).getGUID(),
+                SOFTWARE_SERVER_CAPABILITY_ENTITY_NAME,
                 softwareServerProperties,
                 methodName);
     }
@@ -112,8 +112,8 @@ public class DataPlatformRegistrationHandler {
                 qualifiedName,
                 QUALIFIED_NAME_PROPERTY_NAME,
                 properties,
-                repositoryHelper.getTypeDefByName(DATA_PLATFORM_USER_ID,SOFTWARE_SERVER_CAPABILITY_TYPE_NAME).getGUID(),
-                SOFTWARE_SERVER_CAPABILITY_TYPE_NAME,
+                repositoryHelper.getTypeDefByName(DATA_PLATFORM_USER_ID, SOFTWARE_SERVER_CAPABILITY_ENTITY_NAME).getGUID(),
+                SOFTWARE_SERVER_CAPABILITY_ENTITY_NAME,
                 methodName);
         return entity.getGUID();
     }

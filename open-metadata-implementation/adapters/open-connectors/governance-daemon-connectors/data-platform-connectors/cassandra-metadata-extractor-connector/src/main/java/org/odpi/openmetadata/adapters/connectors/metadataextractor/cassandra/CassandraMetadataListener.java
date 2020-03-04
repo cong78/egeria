@@ -7,7 +7,7 @@ import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.odpi.openmetadata.accessservices.dataplatform.client.DataPlatformClient;
 import org.odpi.openmetadata.accessservices.dataplatform.properties.DeployedDatabaseSchema;
-import org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.auditlog.CassandraMetadataExtractorAuditCode;
+import org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.auditlog.CassandraMetadataExtractorErrorCode;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
@@ -24,7 +24,7 @@ public class CassandraMetadataListener implements SchemaChangeListener {
 
     private String userId;
     private OMRSAuditLog omrsAuditLog;
-    private CassandraMetadataExtractorAuditCode auditLog;
+    private CassandraMetadataExtractorErrorCode auditLog;
     private DataPlatformClient dataPlatformClient;
 
     public CassandraMetadataListener(DataPlatformClient dataPlatformClient, String userId) {
@@ -48,19 +48,10 @@ public class CassandraMetadataListener implements SchemaChangeListener {
             //TODO: map tabularSchemaType and tabularColumn from keyspace metadata
 
             dataPlatformClient.createDeployedDatabaseSchema(userId, deployedDatabaseSchema);
-        } catch (InvalidParameterException | PropertyServerException | UserNotAuthorizedException | NullPointerException e){
-
-            log.error("Error in creating Cassandra Keyspace as an Deployed Database Schema asset", e);
-
-            auditLog = CassandraMetadataExtractorAuditCode.CONNECTOR_CREATING_KEYSPACE;
-            omrsAuditLog.logRecord(
-                    actionDescription,
-                    auditLog.getLogMessageId(),
-                    auditLog.getSeverity(),
-                    auditLog.getFormattedLogMessage(),
-                    null,
-                    auditLog.getSystemAction(),
-                    auditLog.getUserAction());
+        } catch (InvalidParameterException | PropertyServerException | UserNotAuthorizedException | NullPointerException e) {
+            if (log.isDebugEnabled()) {
+                log.error("Error in creating Cassandra Keyspace as an Deployed Database Schema asset", e);
+            }
         }
 
     }

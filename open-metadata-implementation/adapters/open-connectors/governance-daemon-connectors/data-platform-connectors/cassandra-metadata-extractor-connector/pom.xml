@@ -65,6 +65,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>cassandra-data-store-connector</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
         </dependency>

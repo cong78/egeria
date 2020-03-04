@@ -3,31 +3,32 @@
 
 package org.odpi.openmetadata.adapters.connectors.datastore.cassandra;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.CqlSessionBuilder;
-import com.datastax.oss.driver.api.core.metadata.schema.SchemaChangeListener;
-import org.odpi.openmetadata.adapters.connectors.datastore.cassandra.ffdc.CassandraDataStoreAuditCode;
+import org.odpi.openmetadata.adapters.connectors.datastore.cassandra.ffdc.CassandraConnectionException;
+import org.odpi.openmetadata.adapters.connectors.datastore.cassandra.ffdc.CassandraDataStoreErrorCode;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBase;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectionCheckedException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
 import org.odpi.openmetadata.frameworks.connectors.properties.ConnectionProperties;
 import org.odpi.openmetadata.frameworks.connectors.properties.EndpointProperties;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
 
 /**
  * The Cassandra data store connector provides the OCF connection objects for Apache Cassandra Database.
  */
 public class CassandraDataStoreConnector extends ConnectorBase {
-    private static final Logger log = LoggerFactory.getLogger(CassandraDataStoreConnector.class);
-    private CassandraDataStoreAuditCode auditLog;
-    private OMRSAuditLog omrsAuditLog;
 
-    private CqlSession cqlSession;
+    private static final Logger log = LoggerFactory.getLogger(CassandraDataStoreConnector.class);
+
+    /* Qualified Name of the Cassandra Connection */
+    private String cassandraConnectionName = null;
+
+    /* Clear password set up */
     private String username = null;
     private String password = null;
+
+    /* Server Connection Details */
     private String serverAddresses = null;
     private String port = null;
 
@@ -47,109 +48,82 @@ public class CassandraDataStoreConnector extends ConnectorBase {
      */
     @Override
     public void initialize(String connectorInstanceId, ConnectionProperties connectionProperties) {
+
+        final String methodName = "initialize Cassandra Data Store Connector";
+
         super.initialize(connectorInstanceId, connectionProperties);
-
-        final String actionDescription = "initialize Cassandra Data Store Connection";
-
-        this.connectorInstanceId = connectorInstanceId;
-        this.connectionProperties = connectionProperties;
 
         EndpointProperties endpoint = connectionProperties.getEndpoint();
 
-        super.initialize(connectorInstanceId, connectionProperties);
-
-        if (omrsAuditLog != null) {
-            auditLog = CassandraDataStoreAuditCode.CONNECTOR_INITIALIZING;
-            omrsAuditLog.logRecord(
-                    actionDescription,
-                    auditLog.getLogMessageId(),
-                    auditLog.getSeverity(),
-                    auditLog.getFormattedLogMessage(),
-                    null,
-                    auditLog.getSystemAction(),
-                    auditLog.getUserAction());
-        }
-
-        if (endpoint != null ) {
-            serverAddresses = endpoint.getAddress();
-            port = endpoint.getAdditionalProperties().getProperty("port");
-            username = connectionProperties.getUserId();
-            password = connectionProperties.getClearPassword();
-
-        } else {
-            if (omrsAuditLog!=null){
-                    auditLog = CassandraDataStoreAuditCode.CONNECTOR_SERVER_CONFIGURATION_ERROR;
-                    omrsAuditLog.logRecord(actionDescription,
-                            auditLog.getLogMessageId(),
-                            auditLog.getSeverity(),
-                            auditLog.getFormattedLogMessage(),
-                            null,
-                            auditLog.getSystemAction(),
-                            auditLog.getUserAction());}
-        }
-    }
-
-
-    /**
-     * Set up the Cassandra Cluster Connection
-     */
-    public void startCassandraConnection() {
-
-        String actionDescription = "start Cassandra Data Store Connection";
         try {
-            CqlSessionBuilder builder = CqlSession.builder();
-            builder.addContactPoint(new InetSocketAddress(serverAddresses, Integer.valueOf(port)));
-            builder.withAuthCredentials(username, password);
-            this.cqlSession = builder.build();
+            if (endpoint.getAddress().isEmpty()) {
+                this.throwException(CassandraDataStoreErrorCode.CASSANDRA_SERVER_NOT_SPECIFIED, methodName, null, null);
+            } else {
 
-        } catch (ExceptionInInitializerError e) {
-            auditLog = CassandraDataStoreAuditCode.CONNECTOR_SERVER_CONNECTION_ERROR;
-            omrsAuditLog.logRecord(actionDescription,
-                    auditLog.getLogMessageId(),
-                    auditLog.getSeverity(),
-                    auditLog.getFormattedLogMessage(),
-                    null,
-                    auditLog.getSystemAction(),
-                    auditLog.getUserAction());
+                this.cassandraConnectionName = connectionProperties.getQualifiedName();
+                this.serverAddresses = endpoint.getAddress();
+                this.port = endpoint.getAdditionalProperties().getProperty("port");
+                this.username = connectionProperties.getUserId();
+                this.password = connectionProperties.getClearPassword();
+
+
+            }
+        } catch (CassandraConnectionException e) {
+            log.debug("Unexpected exception " + e.getClass().getSimpleName() + " with message " + e.getMessage());
         }
-        auditLog = CassandraDataStoreAuditCode.CONNECTOR_INITIALIZED;
-        omrsAuditLog.logRecord(actionDescription,
-                auditLog.getLogMessageId(),
-                auditLog.getSeverity(),
-                auditLog.getFormattedLogMessage(),
-                null,
-                auditLog.getSystemAction(),
-                auditLog.getUserAction());
     }
 
-    /**
-     * Provide Cassandra Session.
-     *
-     * @return Cassandra session.
-     */
-    public CqlSession getSession() {
-        return this.cqlSession;
-    }
-
-    /**
-     * Free up any resources held since the connector is no longer needed.
-     *
-     * @throws ConnectorCheckedException there is a problem within the connector.
-     */
     @Override
     public void disconnect() throws ConnectorCheckedException {
+
+        String actionDescription = "Shut down the Cassandra Data Store connection.";
+
         super.disconnect();
 
-        String actionDescription = "Shut down the Cassandra data store connection.";
-        cqlSession.close();
-        auditLog = CassandraDataStoreAuditCode.CONNECTOR_SHUTDOWN;
-        omrsAuditLog.logRecord(actionDescription,
-                auditLog.getLogMessageId(),
-                auditLog.getSeverity(),
-                auditLog.getFormattedLogMessage(),
-                null,
-                auditLog.getSystemAction(),
-                auditLog.getUserAction());
+        if (log.isDebugEnabled()) {
+            log.info(actionDescription);
+        }
+    }
+
+    /**
+     * Throw a standard exception based on the supplied error code.
+     *
+     * @param errorCode               error code describing the problem
+     * @param methodName              calling method
+     * @param cassandraConnectionName name of the Cassandra Database
+     *                                CassandraDataStoreErrorCode exception that is generated
+     */
+    private void throwException(CassandraDataStoreErrorCode errorCode,
+                                String methodName,
+                                String cassandraConnectionName,
+                                Throwable caughtException) throws CassandraConnectionException {
+        String errorMessage;
+
+        if (cassandraConnectionName == null) {
+            errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(super.connectionBean.getQualifiedName());
+        } else {
+            errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(cassandraConnectionName,
+                    super.connectionBean.getQualifiedName());
+        }
+
+        if (caughtException == null) {
+            throw new CassandraConnectionException(errorCode.getHTTPErrorCode(),
+                    this.getClass().getName(),
+                    methodName,
+                    errorMessage,
+                    errorCode.getSystemAction(),
+                    errorCode.getUserAction(),
+                    cassandraConnectionName);
+        } else {
+            throw new CassandraConnectionException(errorCode.getHTTPErrorCode(),
+                    this.getClass().getName(),
+                    methodName,
+                    errorMessage,
+                    errorCode.getSystemAction(),
+                    errorCode.getUserAction(),
+                    caughtException,
+                    cassandraConnectionName);
+        }
     }
 
 }

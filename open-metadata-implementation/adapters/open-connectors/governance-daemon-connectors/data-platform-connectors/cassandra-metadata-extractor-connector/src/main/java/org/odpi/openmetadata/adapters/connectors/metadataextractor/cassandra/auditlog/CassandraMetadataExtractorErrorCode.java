@@ -5,11 +5,10 @@
  */
 package org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.auditlog;
 
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLogRecordSeverity;
 import java.text.MessageFormat;
 
 /**
- * The enum Cassandra connector audit code.
+ * The Cassandra connector error code.
  */
 public enum CassandraMetadataExtractorErrorCode {
 
@@ -29,20 +28,6 @@ public enum CassandraMetadataExtractorErrorCode {
     private String systemAction;
     private String userAction;
 
-    /**
-     * The constructor for LocalAtlasOMRSErrorCode expects to be passed one of the enumeration rows defined in
-     * LocalAtlasOMRSErrorCode above.   For example:
-     * <p>
-     * LocalAtlasOMRSErrorCode   errorCode = LocalAtlasOMRSErrorCode.NULL_INSTANCE;
-     * <p>
-     * This will expand out to the 5 parameters shown below.
-     *
-     * @param newHTTPErrorCode  - error code to use over REST calls
-     * @param newErrorMessageId - unique Id for the message
-     * @param newErrorMessage   - text for the message
-     * @param newSystemAction   - description of the action taken by the system when the error condition happened
-     * @param newUserAction     - instructions for resolving the error
-     */
     CassandraMetadataExtractorErrorCode(int newHTTPErrorCode, String newErrorMessageId, String newErrorMessage, String newSystemAction, String newUserAction) {
         this.httpErrorCode = newHTTPErrorCode;
         this.errorMessageId = newErrorMessageId;

@@ -46,7 +46,7 @@ public abstract class CassandraMetadataExtractorConnector extends DataPlatformMe
 
         try {
             if (endpoint.getAddress() == null || endpoint.getAddress().equals("")) {
-                throwException(CassandraMetadataExtractorErrorCode.CONNECTION_FAILURE, actionDescription, endpoint.getAddress());
+                throwException(CassandraMetadataExtractorErrorCode.CASSANDRA_SERVER_NOT_SPECIFIED, actionDescription, endpoint.getAddress());
             } else {
                 CassandraMetadataListener cassandraMetadataListener = new CassandraMetadataListener(
                         this.getDataPlatformClient(), connectionProperties.getUserId());

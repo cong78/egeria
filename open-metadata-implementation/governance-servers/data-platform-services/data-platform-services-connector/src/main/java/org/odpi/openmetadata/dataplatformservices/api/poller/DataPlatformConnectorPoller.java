@@ -1,16 +1,38 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* Copyright Contributors to the ODPi Egeria project. */
-package org.odpi.openmetadata.dataplatformservices.api;
+package org.odpi.openmetadata.dataplatformservices.api.poller;
 
 import org.odpi.openmetadata.dataplatformservices.api.model.DataPlatformDeployedDatabaseSchema;
 import org.odpi.openmetadata.dataplatformservices.api.model.DataPlatformSoftwareServerCapability;
 import org.odpi.openmetadata.dataplatformservices.api.model.DataPlatformTabularColumn;
 import org.odpi.openmetadata.dataplatformservices.api.model.DataPlatformTabularSchema;
 
-/**
- * The interface of Data Platform Metadata Extractor.
- */
-public interface DataPlatformMetadataExtractor {
+import java.util.Date;
+
+public interface DataPlatformConnectorPoller {
+
+    /**
+     * Indicates whether the data platform requires polling (true) or is capable of notifying of changes on its own
+     * (false).
+     *
+     * @return boolean
+     */
+    boolean requiresPolling();
+
+    /**
+     * Retrieve the date and time at which changes were last synchronized.
+     *
+     * @return Date
+     */
+    Date getChangesLastSynced();
+
+    /**
+     * Persist the date and time at which changes were last successfully synchronized.
+     *
+     * @param time the time to record for the last synchronization
+     */
+    void setChangesLastSynced(Date time);
+
 
     /**
      * Gets data platform software server capability.
@@ -39,5 +61,4 @@ public interface DataPlatformMetadataExtractor {
      * @return the data platform tabular column
      */
     DataPlatformTabularColumn getDataPlatformTabularColumn();
-
 }

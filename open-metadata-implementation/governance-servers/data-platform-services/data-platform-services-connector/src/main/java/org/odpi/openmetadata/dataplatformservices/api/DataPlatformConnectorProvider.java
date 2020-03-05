@@ -15,11 +15,13 @@ import org.odpi.openmetadata.frameworks.connectors.ConnectorProviderBase;
  * name of the Data Platform Connector implementation (by calling super.setConnectorClassName(className)).
  * Then the connector provider will work.
  */
-public class DataPlatformMetadataExtractorProvider extends ConnectorProviderBase {
+public class DataPlatformConnectorProvider extends ConnectorProviderBase {
 
     /**
      * Instantiates a new Data platform metadata extractor provider.
      */
-    public DataPlatformMetadataExtractorProvider() { super(); }
+    public DataPlatformConnectorProvider() {
+        super();
+    }
 
 }

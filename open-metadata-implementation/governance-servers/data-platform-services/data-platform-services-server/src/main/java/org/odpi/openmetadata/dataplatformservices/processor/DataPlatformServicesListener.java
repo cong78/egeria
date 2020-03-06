@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class to handle event-based mechanism to notify changes on external data platforms by passing it to Data Platform OMAS
+ * Class to handle event-based mechanism to notify changes on data platforms by passing it to Data Platform OMAS
  * Client side implementation.
  */
 public class DataPlatformServicesListener implements Runnable {

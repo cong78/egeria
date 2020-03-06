@@ -55,6 +55,11 @@
             <artifactId>data-platform-client</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>audit-log-framework</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
 </project>

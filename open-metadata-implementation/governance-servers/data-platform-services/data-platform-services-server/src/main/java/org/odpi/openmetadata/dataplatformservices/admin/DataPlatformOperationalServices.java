@@ -6,7 +6,11 @@ import org.odpi.openmetadata.accessservices.dataplatform.client.DataPlatformClie
 import org.odpi.openmetadata.adminservices.configuration.properties.DataPlatformServicesConfig;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
 import org.odpi.openmetadata.dataplatformservices.api.listener.DataPlatformConnectorListenerBase;
+import org.odpi.openmetadata.dataplatformservices.api.poller.DataPlatformConnectorPoller;
+import org.odpi.openmetadata.dataplatformservices.api.poller.DataPlatformConnectorPollerBase;
 import org.odpi.openmetadata.dataplatformservices.auditlog.DataPlatformServicesAuditCode;
+import org.odpi.openmetadata.dataplatformservices.processor.DataPlatformServicesListener;
+import org.odpi.openmetadata.dataplatformservices.processor.DataPlatformServicesPoller;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBroker;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
@@ -25,58 +29,47 @@ import org.slf4j.LoggerFactory;
 public class DataPlatformOperationalServices {
 
     private static final Logger log = LoggerFactory.getLogger(DataPlatformOperationalServices.class);
-
-
-    private String localServerName;               /* Initialized in constructor */
-    private String localServerUserId;             /* Initialized in constructor */
-    private String localServerPassword;           /* Initialized in constructor */
-    private String localServerType;               /* Initialized in constructor */
-    private String localOrganizationName;         /* Initialized in constructor */
-    private String localServerURL;                /* Initialized in constructor */
-
     private OMRSAuditLog auditLog;
-    private OpenMetadataTopicConnector dataPlatformOmasInTopicConnector;
-    private DataPlatformConnectorListenerBase dataPlatformConnector;
-    private DataPlatformServicesConfig dataPlatformServicesConfig;
+
+    private String localServerName;
+    private String localServerUserId;
+    private String localServerPassword;
+
+    private DataPlatformConnectorListenerBase dataPlatformConnectorListenerConnector;
+    private DataPlatformConnectorPollerBase dataPlatformConnectorPollerConnector;
+
+    private DataPlatformServicesListener dataPlatformServicesListener;
+    private DataPlatformServicesPoller dataPlatformServicesPoller;
 
     /**
      * Constructor used at server startup.
      *
      * @param localServerName   the local server name
      * @param localServerUserId the local server user id
-     * @param localServerType   the local server type
-     * @param localServerURL    the local server url
      */
-    public DataPlatformOperationalServices(String localServerName, String localServerUserId, String localServerType, String localServerURL) {
+    public DataPlatformOperationalServices(String localServerName, String localServerUserId, String localServerPassword) {
         this.localServerName = localServerName;
         this.localServerUserId = localServerUserId;
-        this.localServerType = localServerType;
-        this.localServerURL = localServerURL;
+        this.localServerPassword = localServerPassword;
     }
 
     /**
-     * Initialize.
+     * Initialize the Data Platform Services with provided configuration
      *
      * @param dataPlatformServicesConfig the data platform config
-     * @param auditLog           the audit log
+     * @param auditLog                   the audit log
      * @throws OMAGConfigurationErrorException the omag configuration error exception
      */
-    public void initialize(DataPlatformServicesConfig dataPlatformServicesConfig, OMRSAuditLog auditLog) throws OMAGConfigurationErrorException{
+    public void initialize(DataPlatformServicesConfig dataPlatformServicesConfig, OMRSAuditLog auditLog) throws OMAGConfigurationErrorException {
 
-        final String actionDescription = "initialize";
+        final String methodName = "initialize";
 
-        if (dataPlatformServicesConfig != null) {
-            this.auditLog = auditLog;
-            this.dataPlatformServicesConfig = dataPlatformServicesConfig;
-
-            DataPlatformServicesAuditCode auditCode = DataPlatformServicesAuditCode.SERVICE_INITIALIZING;
-            auditLog.logRecord(actionDescription,
-                    auditCode.getLogMessageId(),
-                    auditCode.getSeverity(),
-                    auditCode.getFormattedLogMessage(),
-                    null,
-                    auditCode.getSystemAction(),
-                    auditCode.getUserAction());
+        if (dataPlatformServicesConfig == null) {
+            auditLog.logMessage(methodName, DataPlatformServicesAuditCode.NO_CONFIG_DOC.getMessageDefinition(localServerName));
+        } else if (dataPlatformServicesConfig.getAccessServiceRootURL() == null || dataPlatformServicesConfig.getAccessServiceServerName() == null) {
+            auditLog.logMessage(methodName, DataPlatformServicesAuditCode.NO_OMAS_CONFIG.getMessageDefinition(localServerName));
+        } else {
+            auditLog.logMessage(methodName, DataPlatformServicesAuditCode.SERVICE_INITIALIZING.getMessageDefinition(localServerName));
 
             /*
              * Configuring the Data Platform OMAS client
@@ -84,16 +77,18 @@ public class DataPlatformOperationalServices {
             DataPlatformClient dataPlatformClient;
             try {
                 dataPlatformClient = new DataPlatformClient(
-                        dataPlatformServicesConfig.getDataPlatformServerName(),
-                        dataPlatformServicesConfig.getDataPlatformServerURL(),
+                        dataPlatformServicesConfig.getAccessServiceServerName(),
+                        dataPlatformServicesConfig.getAccessServiceRootURL(),
                         localServerUserId,
                         localServerPassword
                 );
-                log.debug("Configuring the Data Platform OMAS Client: {}", dataPlatformClient);
+                if (log.isDebugEnabled()) {
+                    log.debug("Configuring the Data Platform OMAS Client: {}", dataPlatformClient);
+                }
             } catch (InvalidParameterException error) {
                 throw new OMAGConfigurationErrorException(error.getReportedHTTPCode(),
                         this.getClass().getName(),
-                        actionDescription,
+                        methodName,
                         error.getErrorMessage(),
                         error.getReportedSystemAction(),
                         error.getReportedUserAction(),
@@ -101,68 +96,43 @@ public class DataPlatformOperationalServices {
             }
 
             /*
-             * Configuring the Data Platform Metadata Extractor Connector
+             * Configuring the Data Platform Connector to Listener or Poller
              */
             Connection dataPlatformConnection = dataPlatformServicesConfig.getDataPlatformConnection();
 
             if (dataPlatformConnection != null) {
                 try {
                     ConnectorBroker connectorBroker = new ConnectorBroker();
-                    dataPlatformConnector = (DataPlatformConnectorListenerBase) connectorBroker.getConnector(dataPlatformConnection);
-
-
-                    if (log.isDebugEnabled()) {
-                        log.debug("The following Data Platform Metadata Extractor has been configured: {}", this.dataPlatformConnector);
+                    if (dataPlatformServicesConfig.isListener() && !dataPlatformServicesConfig.isPoller()) {
+                        dataPlatformConnectorListenerConnector = (DataPlatformConnectorListenerBase) connectorBroker.getConnector(dataPlatformConnection);
+                        dataPlatformServicesListener = new DataPlatformServicesListener(auditLog,
+                                dataPlatformServicesConfig,
+                                dataPlatformClient,
+                                dataPlatformConnectorListenerConnector);
+                        dataPlatformServicesListener.run();
+                    } else if (!dataPlatformServicesConfig.isListener() && dataPlatformServicesConfig.isPoller()) {
+                        dataPlatformConnectorPollerConnector = (DataPlatformConnectorPollerBase) connectorBroker.getConnector(dataPlatformConnection);
+                        dataPlatformServicesPoller = new DataPlatformServicesPoller(auditLog,
+                                dataPlatformServicesConfig,
+                                dataPlatformClient,
+                                dataPlatformConnectorPollerConnector);
+                        dataPlatformServicesPoller.run();
+                    } else {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Exception in creating the valid Data Platform Connector type to be listener or poller.");
+                        }
+                        auditLog.logMessage(methodName, DataPlatformServicesAuditCode.ERROR_INVALID_CONNECTOR_TYPE.getMessageDefinition());
                     }
-
                 } catch (Exception e) {
-                    log.error ("Exception in creating the Data Platform Connector: ", e);
-                    auditCode = DataPlatformServicesAuditCode.ERROR_INITIALIZING_DATA_PLATFORM_CONNECTION;
-                    auditLog.logRecord(actionDescription,
-                            auditCode.getLogMessageId(),
-                            auditCode.getSeverity(),
-                            auditCode.getFormattedLogMessage(),
-                            null,
-                            auditCode.getSystemAction(),
-                            auditCode.getUserAction());
+                    log.error("Exception in creating the Data Platform Connector: ", e);
+                    auditLog.logMessage(methodName, DataPlatformServicesAuditCode.ERROR_INITIALIZING_DATA_PLATFORM_CONNECTION.getMessageDefinition());
                 }
             }
 
-            /*
-             * Starting the Data Platform In Topic Connector
-             */
-            if (dataPlatformOmasInTopicConnector != null) {
-                try {
-                    dataPlatformOmasInTopicConnector.start();
-                    auditCode = DataPlatformServicesAuditCode.DP_OMAS_IN_TOPIC_CONNECTION_INITIALIZED;
-                    auditLog.logRecord(actionDescription,
-                            auditCode.getLogMessageId(),
-                            auditCode.getSeverity(),
-                            auditCode.getFormattedLogMessage(),
-                            null,
-                            auditCode.getSystemAction(),
-                            auditCode.getUserAction());
+            auditLog.logMessage(methodName, DataPlatformServicesAuditCode.SERVICE_INITIALIZED.getMessageDefinition(localServerName));
 
-                } catch (Exception e) {
-                    auditCode = DataPlatformServicesAuditCode.ERROR_INITIALIZING_DP_OMAS_IN_TOPIC_CONNECTION;
-                    auditLog.logRecord(actionDescription,
-                            auditCode.getLogMessageId(),
-                            auditCode.getSeverity(),
-                            auditCode.getFormattedLogMessage(),
-                            null,
-                            auditCode.getSystemAction(),
-                            auditCode.getUserAction());
-                }
-            }
-            auditCode = DataPlatformServicesAuditCode.SERVICE_INITIALIZED;
-            auditLog.logRecord(actionDescription,
-                    auditCode.getLogMessageId(),
-                    auditCode.getSeverity(),
-                    auditCode.getFormattedLogMessage(),
-                    null,
-                    auditCode.getSystemAction(),
-                    auditCode.getUserAction());
         }
+
     }
 
 
@@ -173,29 +143,20 @@ public class DataPlatformOperationalServices {
      * @return boolean indicated whether the disconnect was successful.
      */
     public boolean disconnect(boolean permanent) {
+
+        String methodName = "disconnect";
         DataPlatformServicesAuditCode auditCode;
+
         try {
             // Disconnect the data platform connector
-            dataPlatformConnector.disconnect();
-            dataPlatformOmasInTopicConnector.disconnect();
-            auditCode = DataPlatformServicesAuditCode.SERVICE_SHUTDOWN;
-            auditLog.logRecord("Disconnecting",
-                    auditCode.getLogMessageId(),
-                    auditCode.getSeverity(),
-                    auditCode.getFormattedLogMessage(localServerName),
-                    null,
-                    auditCode.getSystemAction(),
-                    auditCode.getUserAction());
+            dataPlatformConnectorListenerConnector.disconnect();
+            dataPlatformConnectorListenerConnector.disconnect();
+
+            auditLog.logMessage(methodName, DataPlatformServicesAuditCode.SERVICE_SHUTDOWN.getMessageDefinition(localServerName));
+
             return true;
         } catch (Exception e) {
-            auditCode = DataPlatformServicesAuditCode.ERROR_SHUTDOWN;
-            auditLog.logRecord("Disconnecting",
-                    auditCode.getLogMessageId(),
-                    auditCode.getSeverity(),
-                    auditCode.getFormattedLogMessage(),
-                    null,
-                    auditCode.getSystemAction(),
-                    auditCode.getUserAction());
+            auditLog.logMessage(methodName, DataPlatformServicesAuditCode.ERROR_SHUTDOWN.getMessageDefinition(localServerName));
             return false;
         }
     }
@@ -231,14 +192,5 @@ public class DataPlatformOperationalServices {
                     error);
 
         }
-    }
-
-    /**
-     * Gets data platform config.
-     *
-     * @return the data platform config
-     */
-    public DataPlatformServicesConfig getDataPlatformServicesConfig() {
-        return dataPlatformServicesConfig;
     }
 }

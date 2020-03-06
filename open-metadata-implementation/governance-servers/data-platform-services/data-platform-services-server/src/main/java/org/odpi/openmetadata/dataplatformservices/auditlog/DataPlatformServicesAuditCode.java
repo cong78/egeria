@@ -2,27 +2,28 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.dataplatformservices.auditlog;
 
+import org.odpi.openmetadata.frameworks.auditlog.messagesets.AuditLogMessageDefinition;
+import org.odpi.openmetadata.frameworks.auditlog.messagesets.AuditLogMessageSet;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLogRecordSeverity;
 
-import java.text.MessageFormat;
 
-public enum DataPlatformServicesAuditCode {
+public enum DataPlatformServicesAuditCode implements AuditLogMessageSet {
 
 
     SERVICE_INITIALIZING("DATA-PLATFORM-SERVICES-0001",
             OMRSAuditLogRecordSeverity.INFO,
-            "The DATA-PLATFORM-SERVICES is initializing a new server instance",
-            "The local server has started up a new instance of the Virutalizer.",
+            "The Data Platform Service is initializing a new server instance",
+            "The local server has started up a new instance of Data Platform Service.",
             "No action is required.  This is part of the normal operation of the service."),
     SERVICE_INITIALIZED("DATA-PLATFORM-SERVICES-0002",
             OMRSAuditLogRecordSeverity.INFO,
-            "The DATA-PLATFORM-SERVICES has initialized a new instance for server {0}",
+            "The Data Platform Service has initialized a new instance for server {0}",
             "The local server has completed initialization of a new instance.",
             "No action is required.  This is part of the normal operation of the service."),
     SERVICE_SHUTDOWN("DATA-PLATFORM-SERVICES-0003",
             OMRSAuditLogRecordSeverity.INFO,
-            "The DATA-PLATFORM-SERVICES is shutting down its instance for server {0}",
-            "The local server has requested shut down of a DATA-PLATFORM-SERVICES instance.",
+            "The Data Platform Service is shutting down its instance for server {0}",
+            "The local server has requested shut down of a Data Platform Service instance.",
             "No action is required.  This is part of the normal operation of the service."),
     ERROR_INITIALIZING_DATA_PLATFORM_CONNECTION("DATA-PLATFORM-SERVICES-0004",
             OMRSAuditLogRecordSeverity.ERROR,
@@ -31,7 +32,7 @@ public enum DataPlatformServicesAuditCode {
             "Review the exception and resolve the configuration. "),
     DP_OMAS_IN_TOPIC_CONNECTION_INITIALIZED("DATA-PLATFORM-SERVICES-0005",
             OMRSAuditLogRecordSeverity.INFO,
-            "The DATA-PLATFORM-SERVICES has initialized an event bus connector for Data Platform In Topic",
+            "The Data Platform Service has initialized an event bus connector for Data Platform In Topic",
             "The local server has completed initialization of a new event bus connector.",
             "No action is required.  This is part of the normal operation of the service."),
     ERROR_INITIALIZING_DP_OMAS_IN_TOPIC_CONNECTION("DATA-PLATFORM-SERVICES-0006",
@@ -48,7 +49,22 @@ public enum DataPlatformServicesAuditCode {
             OMRSAuditLogRecordSeverity.EXCEPTION,
             "Event {0} could not be published: {1}",
             "The system is unable to process the request.",
-            "Verify the topic configuration.");
+            "Verify the topic configuration."),
+    ERROR_INVALID_CONNECTOR_TYPE("DATA-PLATFORM-SERVICES-0009",
+            OMRSAuditLogRecordSeverity.ERROR,
+            "Invalid Data Platform Service Connector type. It has not being define as Listener or Poller. ",
+            "The Data Platform Service cannot initialize the connection from the provided configuration. ",
+            "Verify the provided Data Platform Service configuration to make sure one of the connector type is set as true."),
+    NO_CONFIG_DOC("DATA-PLATFORM-SERVICES-0010",
+            OMRSAuditLogRecordSeverity.ERROR,
+            "Data Platform Service {0} is not configured with a configuration document",
+            "The server is not able to retrieve its configuration.  It fails to start.",
+            "Add the configuration document for this Data Platform Service"),
+    NO_OMAS_CONFIG("DATA-PLATFORM-SERVICES-0011",
+            OMRSAuditLogRecordSeverity.ERROR,
+            "Data Platform Service {0} is not configured with OMAS name or server URL parameters",
+            "The server is not able to retrieve OMAS configuration details.  It fails to start.",
+            "Add the OMAS name or URL configuration details for this Data Platform Service");
 
 
     private String logMessageId;
@@ -81,53 +97,30 @@ public enum DataPlatformServicesAuditCode {
         this.userAction = userAction;
     }
 
+
     /**
-     * Returns the unique identifier for the error message.
-     *
-     * @return logMessageId
+     * {@inheritDoc}
      */
-    public String getLogMessageId() {
-        return logMessageId;
+    @Override
+    public AuditLogMessageDefinition getMessageDefinition() {
+        return new AuditLogMessageDefinition(logMessageId,
+                severity,
+                logMessage,
+                systemAction,
+                userAction);
     }
 
     /**
-     * Returns the log message with the placeholders filled out with the supplied parameters.
-     *
-     * @param params - strings that plug into the placeholders in the logMessage
-     * @return logMessage (formatted with supplied parameters)
+     * {@inheritDoc}
      */
-    public String getFormattedLogMessage(String... params) {
-        MessageFormat mf = new MessageFormat(logMessage);
-        return mf.format(params);
-    }
-
-
-    /**
-     * Returns a description of the action taken by the system when the condition that caused this exception was
-     * detected.
-     *
-     * @return systemAction String
-     */
-    public String getSystemAction() {
-        return systemAction;
-    }
-
-
-    /**
-     * Returns instructions of how to resolve the issue reported in this exception.
-     *
-     * @return userAction String
-     */
-    public String getUserAction() {
-        return userAction;
-    }
-
-    /**
-     * Return the severity of the audit log record.
-     *
-     * @return OMRSAuditLogRecordSeverity enum
-     */
-    public OMRSAuditLogRecordSeverity getSeverity() {
-        return severity;
+    @Override
+    public AuditLogMessageDefinition getMessageDefinition(String... params) {
+        AuditLogMessageDefinition messageDefinition = new AuditLogMessageDefinition(logMessageId,
+                severity,
+                logMessage,
+                systemAction,
+                userAction);
+        messageDefinition.setMessageParameters(params);
+        return messageDefinition;
     }
 }

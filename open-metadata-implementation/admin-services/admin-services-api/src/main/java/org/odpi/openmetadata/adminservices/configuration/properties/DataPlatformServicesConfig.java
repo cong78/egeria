@@ -8,122 +8,183 @@ import java.util.Map;
 
 
 /**
- * The Data platform config class provides the configuration properties for the data-platform-services.
+ * The Data platform config class provides the configuration properties for the Data Platform Service.
  */
-public class DataPlatformServicesConfig extends AdminServicesConfigHeader
-{
-    private static final long    serialVersionUID = 1L;
+public class DataPlatformServicesConfig extends AdminServicesConfigHeader {
+    private static final long serialVersionUID = 1L;
 
     /* Properties needed to call the access service REST APIs */
-    private String      dataPlatformServerURL;
-    private String      dataPlatformServerName;
+    private String dataPlatformServerURL;
+    private String dataPlatformServerName;
 
-    private String      dataPlatformConnectionProvider;
-    private Connection  dataPlatformConnection;
-    private String      dataPlatformGUID;
+    private Connection dataPlatformConnection;
 
-    /* Connection for topic that send out topics */
-    private String      dataPlatformOmasInTopicName;
-    private Connection  dataPlatformOmasInTopic;
+    private boolean isListener;
+    private boolean isPoller;
 
     /* Properties for a data platform  */
     private Map<String, Object> dataPlatformConfig;
 
-
     /**
      * Default Constructor
      */
-    public DataPlatformServicesConfig()
-    {
+    public DataPlatformServicesConfig() {
+        super();
     }
 
     /**
-     * Default Constructor
+     * Instantiates a new Data platform services config.
+     *
+     * @param dataPlatformServerURL  the data platform server url
+     * @param dataPlatformServerName the data platform server name
+     * @param dataPlatformConnection the data platform connection
+     * @param isListener             the is listener
+     * @param isPoller               the is poller
+     * @param dataPlatformConfig     the data platform config
      */
-    public DataPlatformServicesConfig(String dataPlatformServerURL, String dataPlatformServerName, String dataPlatformConnectionProvider, Connection dataPlatformConnection, String dataPlatformGUID, String dataPlatformOmasInTopicName) {
+    public DataPlatformServicesConfig(String dataPlatformServerURL, String dataPlatformServerName, Connection dataPlatformConnection, boolean isListener, boolean isPoller, Map<String, Object> dataPlatformConfig) {
         this.dataPlatformServerURL = dataPlatformServerURL;
         this.dataPlatformServerName = dataPlatformServerName;
-        this.dataPlatformConnectionProvider = dataPlatformConnectionProvider;
         this.dataPlatformConnection = dataPlatformConnection;
-        this.dataPlatformGUID = dataPlatformGUID;
-        this.dataPlatformOmasInTopicName = dataPlatformOmasInTopicName;
+        this.isListener = isListener;
+        this.isPoller = isPoller;
+        this.dataPlatformConfig = dataPlatformConfig;
     }
 
     /**
-     * Constructor to set up properties in one go
+     * Instantiates a new Data platform services config.
      *
-     * @param template object to copy
+     * @param template               the template
+     * @param dataPlatformServerURL  the data platform server url
+     * @param dataPlatformServerName the data platform server name
+     * @param dataPlatformConnection the data platform connection
+     * @param isListener             the is listener
+     * @param isPoller               the is poller
+     * @param dataPlatformConfig     the data platform config
      */
-    public DataPlatformServicesConfig(AdminServicesConfigHeader template, String dataPlatformServerURL, String dataPlatformServerName, String dataPlatformConnectionProvider, Connection dataPlatformConnection, String dataPlatformGUID, String dataPlatformOmasInTopicName) {
+    public DataPlatformServicesConfig(AdminServicesConfigHeader template, String dataPlatformServerURL, String dataPlatformServerName, Connection dataPlatformConnection, boolean isListener, boolean isPoller, Map<String, Object> dataPlatformConfig) {
         super(template);
         this.dataPlatformServerURL = dataPlatformServerURL;
         this.dataPlatformServerName = dataPlatformServerName;
-        this.dataPlatformConnectionProvider = dataPlatformConnectionProvider;
         this.dataPlatformConnection = dataPlatformConnection;
-        this.dataPlatformGUID = dataPlatformGUID;
-        this.dataPlatformOmasInTopicName = dataPlatformOmasInTopicName;
+        this.isListener = isListener;
+        this.isPoller = isPoller;
+        this.dataPlatformConfig = dataPlatformConfig;
     }
 
+    /**
+     * Gets serial version uid.
+     *
+     * @return the serial version uid
+     */
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    /**
+     * Gets data platform server url.
+     *
+     * @return the data platform server url
+     */
     public String getDataPlatformServerURL() {
         return dataPlatformServerURL;
     }
 
+    /**
+     * Sets data platform server url.
+     *
+     * @param dataPlatformServerURL the data platform server url
+     */
     public void setDataPlatformServerURL(String dataPlatformServerURL) {
         this.dataPlatformServerURL = dataPlatformServerURL;
     }
 
+    /**
+     * Gets data platform server name.
+     *
+     * @return the data platform server name
+     */
     public String getDataPlatformServerName() {
         return dataPlatformServerName;
     }
 
+    /**
+     * Sets data platform server name.
+     *
+     * @param dataPlatformServerName the data platform server name
+     */
     public void setDataPlatformServerName(String dataPlatformServerName) {
         this.dataPlatformServerName = dataPlatformServerName;
     }
 
-    public String getDataPlatformConnectionProvider() {
-        return dataPlatformConnectionProvider;
-    }
-
-    public void setDataPlatformConnectionProvider(String dataPlatformConnectionProvider) {
-        this.dataPlatformConnectionProvider = dataPlatformConnectionProvider;
-    }
-
+    /**
+     * Gets data platform connection.
+     *
+     * @return the data platform connection
+     */
     public Connection getDataPlatformConnection() {
         return dataPlatformConnection;
     }
 
+    /**
+     * Sets data platform connection.
+     *
+     * @param dataPlatformConnection the data platform connection
+     */
     public void setDataPlatformConnection(Connection dataPlatformConnection) {
         this.dataPlatformConnection = dataPlatformConnection;
     }
 
-    public String getDataPlatformGUID() {
-        return dataPlatformGUID;
+    /**
+     * Is listener boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isListener() {
+        return isListener;
     }
 
-    public void setDataPlatformGUID(String dataPlatformGUID) {
-        this.dataPlatformGUID = dataPlatformGUID;
+    /**
+     * Sets listener.
+     *
+     * @param listener the listener
+     */
+    public void setListener(boolean listener) {
+        isListener = listener;
     }
 
-    public String getDataPlatformOmasInTopicName() {
-        return dataPlatformOmasInTopicName;
+    /**
+     * Is poller boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isPoller() {
+        return isPoller;
     }
 
-    public void setDataPlatformOmasInTopicName(String dataPlatformOmasInTopicName) {
-        this.dataPlatformOmasInTopicName = dataPlatformOmasInTopicName;
+    /**
+     * Sets poller.
+     *
+     * @param poller the poller
+     */
+    public void setPoller(boolean poller) {
+        isPoller = poller;
     }
 
-    public Connection getDataPlatformOmasInTopic() {
-        return dataPlatformOmasInTopic;
-    }
-
-    public void setDataPlatformOmasInTopic(Connection dataPlatformOmasInTopic) {
-        this.dataPlatformOmasInTopic = dataPlatformOmasInTopic;
-    }
-
+    /**
+     * Gets data platform config.
+     *
+     * @return the data platform config
+     */
     public Map<String, Object> getDataPlatformConfig() {
         return dataPlatformConfig;
     }
 
+    /**
+     * Sets data platform config.
+     *
+     * @param dataPlatformConfig the data platform config
+     */
     public void setDataPlatformConfig(Map<String, Object> dataPlatformConfig) {
         this.dataPlatformConfig = dataPlatformConfig;
     }
@@ -138,11 +199,9 @@ public class DataPlatformServicesConfig extends AdminServicesConfigHeader
         return "DataPlatformServicesConfig{" +
                 "dataPlatformServerURL='" + dataPlatformServerURL + '\'' +
                 ", dataPlatformServerName='" + dataPlatformServerName + '\'' +
-                ", dataPlatformConnectionProvider='" + dataPlatformConnectionProvider + '\'' +
                 ", dataPlatformConnection=" + dataPlatformConnection +
-                ", dataPlatformGUID='" + dataPlatformGUID + '\'' +
-                ", dataPlatformOmasInTopicName='" + dataPlatformOmasInTopicName + '\'' +
-                ", dataPlatformOmasInTopic=" + dataPlatformOmasInTopic +
+                ", isListener=" + isListener +
+                ", isPoller=" + isPoller +
                 ", dataPlatformConfig=" + dataPlatformConfig +
                 "} " + super.toString();
     }

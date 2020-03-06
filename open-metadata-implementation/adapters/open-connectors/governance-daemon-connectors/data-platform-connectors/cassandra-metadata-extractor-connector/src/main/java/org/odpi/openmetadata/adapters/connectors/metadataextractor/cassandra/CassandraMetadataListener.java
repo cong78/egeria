@@ -5,12 +5,8 @@ package org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra;
 import com.datastax.oss.driver.api.core.metadata.schema.*;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import org.odpi.openmetadata.accessservices.dataplatform.client.DataPlatformClient;
 import org.odpi.openmetadata.accessservices.dataplatform.properties.DeployedDatabaseSchema;
 import org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.auditlog.CassandraMetadataExtractorErrorCode;
-import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
-import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
-import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +21,8 @@ public class CassandraMetadataListener implements SchemaChangeListener {
     private String userId;
     private OMRSAuditLog omrsAuditLog;
     private CassandraMetadataExtractorErrorCode auditLog;
-    private DataPlatformClient dataPlatformClient;
 
-    public CassandraMetadataListener(DataPlatformClient dataPlatformClient, String userId) {
-        this.dataPlatformClient = dataPlatformClient;
+    public CassandraMetadataListener(String userId) {
         this.userId = userId;
     }
 
@@ -47,8 +41,7 @@ public class CassandraMetadataListener implements SchemaChangeListener {
             log.info("New Cassandra keyspace has been created as: " + deployedDatabaseSchema.toString());
             //TODO: map tabularSchemaType and tabularColumn from keyspace metadata
 
-            dataPlatformClient.createDeployedDatabaseSchema(userId, deployedDatabaseSchema);
-        } catch (InvalidParameterException | PropertyServerException | UserNotAuthorizedException | NullPointerException e) {
+        } catch (NullPointerException e) {
             if (log.isDebugEnabled()) {
                 log.error("Error in creating Cassandra Keyspace as an Deployed Database Schema asset", e);
             }

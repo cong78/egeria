@@ -22,14 +22,14 @@ to the Data Platform OMAS.
           "dataPlatformGUID": "296bc645-2043-499c-bcd9-ecff90e46899",
           "dataPlatformServerURL":"127.0.0.1",
           "dataPlatformServerName":"Cassandra Data Platform",
-          "dataPlatformConnectionProvider": "org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.CassandraMetadataExtractorProvider",
+          "dataPlatformConnectionProvider": "org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.CassandraConnectorProvider",
           "dataPlatformConnection":{
             "class": "Connection",
             "displayName": "Apache Cassandra Database",
             "description": "Distributed wide-column database",
             "connectorType": {
               "class": "ConnectorType",
-              "connectorProviderClassName": "org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.CassandraMetadataExtractorProvider"
+              "connectorProviderClassName": "org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.CassandraConnectorProvider"
             },
             "endpoint": {
               "class": "Endpoint",

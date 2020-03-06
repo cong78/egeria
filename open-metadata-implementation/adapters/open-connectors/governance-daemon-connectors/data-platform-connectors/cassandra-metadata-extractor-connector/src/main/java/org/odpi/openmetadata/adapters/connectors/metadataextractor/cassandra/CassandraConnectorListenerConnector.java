@@ -5,9 +5,8 @@ package org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import com.datastax.oss.driver.api.core.metadata.schema.SchemaChangeListener;
-import org.odpi.openmetadata.accessservices.dataplatform.properties.SoftwareServerCapability;
 import org.odpi.openmetadata.adapters.connectors.metadataextractor.cassandra.auditlog.CassandraMetadataExtractorErrorCode;
-import org.odpi.openmetadata.dataplatformservices.api.DataPlatformMetadataExtractorBase;
+import org.odpi.openmetadata.dataplatformservices.api.listener.DataPlatformConnectorListenerBase;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
 import org.odpi.openmetadata.frameworks.connectors.properties.ConnectionProperties;
 import org.odpi.openmetadata.frameworks.connectors.properties.EndpointProperties;
@@ -19,15 +18,13 @@ import java.net.InetSocketAddress;
 
 
 /**
- * The Cassandra Metadata Extractor Connector is the connector for synchronizing data assets from Apache Cassandra Database.
+ * The Cassandra Metadata Extractor Connector is the connector for synchronizing the metadata from Apache Cassandra Database.
  */
-public abstract class CassandraMetadataExtractorConnector extends DataPlatformMetadataExtractorBase {
+public abstract class CassandraConnectorListenerConnector extends DataPlatformConnectorListenerBase {
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraMetadataExtractorConnector.class);
+    private static final Logger log = LoggerFactory.getLogger(CassandraConnectorListenerConnector.class);
     private OMRSAuditLog omrsAuditLog;
-    private CassandraMetadataExtractorErrorCode errorCode;
     private CqlSession cqlSession;
-    private SoftwareServerCapability dataPlatform;
 
     /**
      * Initialize the connector.
@@ -49,7 +46,7 @@ public abstract class CassandraMetadataExtractorConnector extends DataPlatformMe
                 throwException(CassandraMetadataExtractorErrorCode.CASSANDRA_SERVER_NOT_SPECIFIED, actionDescription, endpoint.getAddress());
             } else {
                 CassandraMetadataListener cassandraMetadataListener = new CassandraMetadataListener(
-                        this.getDataPlatformClient(), connectionProperties.getUserId());
+                        connectionProperties.getUserId());
                 startCassandraConnection(cassandraMetadataListener, endpoint.getAddress(), endpoint.getProtocol());
             }
         } catch (ConnectorCheckedException e) {

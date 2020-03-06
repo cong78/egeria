@@ -5,7 +5,7 @@ package org.odpi.openmetadata.dataplatformservices.admin;
 import org.odpi.openmetadata.accessservices.dataplatform.client.DataPlatformClient;
 import org.odpi.openmetadata.adminservices.configuration.properties.DataPlatformServicesConfig;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
-import org.odpi.openmetadata.dataplatformservices.api.DataPlatformMetadataExtractorBase;
+import org.odpi.openmetadata.dataplatformservices.api.listener.DataPlatformConnectorListenerBase;
 import org.odpi.openmetadata.dataplatformservices.auditlog.DataPlatformServicesAuditCode;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBroker;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
@@ -36,7 +36,7 @@ public class DataPlatformOperationalServices {
 
     private OMRSAuditLog auditLog;
     private OpenMetadataTopicConnector dataPlatformOmasInTopicConnector;
-    private DataPlatformMetadataExtractorBase dataPlatformConnector;
+    private DataPlatformConnectorListenerBase dataPlatformConnector;
     private DataPlatformServicesConfig dataPlatformServicesConfig;
 
     /**
@@ -106,36 +106,18 @@ public class DataPlatformOperationalServices {
             Connection dataPlatformConnection = dataPlatformServicesConfig.getDataPlatformConnection();
 
             if (dataPlatformConnection != null) {
-                log.info("Found Data Platform connection: "+ dataPlatformServicesConfig.getDataPlatformConnection());
-
                 try {
                     ConnectorBroker connectorBroker = new ConnectorBroker();
-                    dataPlatformConnector =(DataPlatformMetadataExtractorBase) connectorBroker.getConnector(dataPlatformConnection);
-                    dataPlatformConnector.setDataPlatformClient(dataPlatformClient);
-                    log.debug("The following Data Platform Metadata Extractor has been configured: {}", this.dataPlatformConnector);
+                    dataPlatformConnector = (DataPlatformConnectorListenerBase) connectorBroker.getConnector(dataPlatformConnection);
+
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("The following Data Platform Metadata Extractor has been configured: {}", this.dataPlatformConnector);
+                    }
+
                 } catch (Exception e) {
                     log.error ("Exception in creating the Data Platform Connector: ", e);
                     auditCode = DataPlatformServicesAuditCode.ERROR_INITIALIZING_DATA_PLATFORM_CONNECTION;
-                    auditLog.logRecord(actionDescription,
-                            auditCode.getLogMessageId(),
-                            auditCode.getSeverity(),
-                            auditCode.getFormattedLogMessage(),
-                            null,
-                            auditCode.getSystemAction(),
-                            auditCode.getUserAction());
-                }
-            }
-
-            /*
-             * Configuring the Data Platform OMAS In Topic connector
-             */
-            if (dataPlatformServicesConfig.getDataPlatformOmasInTopicName() != null) {
-                try {
-                    dataPlatformOmasInTopicConnector = getTopicConnector(
-                            dataPlatformServicesConfig.getDataPlatformOmasInTopic(), auditLog);
-                    log.debug("Configuring Data Platform OMAS InTopic Connector: ", dataPlatformOmasInTopicConnector.toString());
-                } catch (Exception e) {
-                    auditCode = DataPlatformServicesAuditCode.ERROR_INITIALIZING_DP_OMAS_IN_TOPIC_CONNECTION;
                     auditLog.logRecord(actionDescription,
                             auditCode.getLogMessageId(),
                             auditCode.getSeverity(),

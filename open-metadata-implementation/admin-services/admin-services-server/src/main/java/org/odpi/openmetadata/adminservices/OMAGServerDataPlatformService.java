@@ -2,111 +2,111 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.adminservices;
 
-import org.odpi.openmetadata.adapters.repositoryservices.ConnectorConfigurationFactory;
-import org.odpi.openmetadata.adminservices.configuration.properties.DataPlatformServicesConfig;
-import org.odpi.openmetadata.adminservices.configuration.properties.EventBusConfig;
-import org.odpi.openmetadata.adminservices.configuration.properties.OMAGServerConfig;
+import org.odpi.openmetadata.adminservices.configuration.properties.*;
+import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
+import org.odpi.openmetadata.adminservices.configuration.registration.CommonServicesDescription;
+import org.odpi.openmetadata.adminservices.configuration.registration.GovernanceServicesDescription;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGInvalidParameterException;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGNotAuthorizedException;
+import org.odpi.openmetadata.commonservices.ffdc.RESTCallLogger;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
+/**
+ * OMAGServerDataPlatformService supports the configuration requests for Data Platform Services.
+ */
 public class OMAGServerDataPlatformService {
+
+    private static final String serviceName = GovernanceServicesDescription.DATA_PLATFORM_SERVICES.getServiceName();
+    private static final String accessService = AccessServiceDescription.DATA_PLATFORM_OMAS.getAccessServiceName();
+
+    private static RESTCallLogger restCallLogger = new RESTCallLogger(LoggerFactory.getLogger(OMAGServerConfigDiscoveryEngineServices.class),
+            CommonServicesDescription.ADMIN_OPERATIONAL_SERVICES.getServiceName());
 
     private OMAGServerAdminStoreServices configStore = new OMAGServerAdminStoreServices();
     private OMAGServerErrorHandler errorHandler = new OMAGServerErrorHandler();
     private OMAGServerExceptionHandler exceptionHandler = new OMAGServerExceptionHandler();
 
-    private static final String defaultDataPlatformInTopicName = "omas.dataplatform.inTopic";
-    private static final String defaultInTopicName = "InTopic";
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
-
-    public VoidResponse setDataPlatformServiceConfig(String userId, String serverName, DataPlatformServicesConfig dataPlatformServicesConfig)
-    {
+    /**
+     * Sets data platform service configuration to OMGA server.
+     *
+     * @param userId                     the user id
+     * @param serverName                 the server name
+     * @param dataPlatformServicesConfig the data platform services config
+     * @return the data platform service config
+     */
+    public VoidResponse setDataPlatformServiceConfig(String userId, String serverName, DataPlatformServicesConfig dataPlatformServicesConfig) {
         String methodName = "setDataPlatformServiceConfig";
         VoidResponse response = new VoidResponse();
 
-        try
-        {
+        try {
             errorHandler.validateServerName(serverName, methodName);
             errorHandler.validateUserId(userId, serverName, methodName);
 
             OMAGServerConfig serverConfig = configStore.getServerConfig(userId, serverName, methodName);
-            ConnectorConfigurationFactory connectorConfigurationFactory = new ConnectorConfigurationFactory();
 
-            EventBusConfig eventBusConfig = serverConfig.getEventBusConfig();
+            List<String> configAuditTrail = serverConfig.getAuditTrail();
 
-            if (dataPlatformServicesConfig.getDataPlatformOmasInTopicName()==null) {
-                dataPlatformServicesConfig.setDataPlatformOmasInTopic(
-                        connectorConfigurationFactory.getDefaultEventBusConnection(
-                                eventBusConfig.getConnectorProvider(),
-                                eventBusConfig.getTopicURLRoot() + ".server." + serverName,
-                                defaultDataPlatformInTopicName,
-                                UUID.randomUUID().toString(),
-                                eventBusConfig.getConfigurationProperties()
-                        )
-                );
-                dataPlatformServicesConfig.setDataPlatformOmasInTopicName(
-                        dataPlatformServicesConfig.getDataPlatformOmasInTopic().getEndpoint().getAddress());
-            } else {
-                dataPlatformServicesConfig.setDataPlatformOmasInTopic(
-                        connectorConfigurationFactory.getDefaultEventBusConnection(
-                                eventBusConfig.getConnectorProvider(),
-                                eventBusConfig.getTopicURLRoot() + ".server." + serverName,
-                                dataPlatformServicesConfig.getDataPlatformOmasInTopicName(),
-                                UUID.randomUUID().toString(),
-                                eventBusConfig.getConfigurationProperties()
-                        )
-                );
+            if (configAuditTrail == null) {
+                configAuditTrail = new ArrayList<>();
             }
-            serverConfig.setDataPlatformServicesConfig(dataPlatformServicesConfig);
-            configStore.saveServerConfig(serverName, methodName, serverConfig);
 
-        }
-        catch (OMAGInvalidParameterException error)
-        {
+            if (dataPlatformServicesConfig == null) {
+                configAuditTrail.add(new Date().toString() + " " + userId + " empty configuration for " + serviceName);
+            } else {
+                configAuditTrail.add(new Date().toString() + " " + userId + " new configuration for " + serviceName);
+                serverConfig.setAuditTrail(configAuditTrail);
+                serverConfig.setDataPlatformServicesConfig(dataPlatformServicesConfig);
+                configStore.saveServerConfig(serverName, methodName, serverConfig);
+            }
+
+        } catch (OMAGInvalidParameterException error) {
             exceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (OMAGNotAuthorizedException error)
-        {
+        } catch (OMAGNotAuthorizedException error) {
             exceptionHandler.captureNotAuthorizedException(response, error);
-        }
-        catch (Throwable  error)
-        {
+        } catch (Throwable error) {
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
         return response;
     }
 
-    public VoidResponse enableDataPlatformService(String userId, String serverName) {
+    /**
+     * Clear data platform service configuration from OMAG server.
+     *
+     * @param userId     the user id
+     * @param serverName the server name
+     * @return the void response
+     */
+    public VoidResponse clearDataPlatformService(String userId, String serverName) {
 
-        final String methodName = "enableDataPlatformService";
+        final String methodName = "clearDataPlatformService";
         VoidResponse response = new VoidResponse();
 
-        try
-        {
+        try {
             errorHandler.validateServerName(serverName, methodName);
             errorHandler.validateUserId(userId, serverName, methodName);
 
             OMAGServerConfig serverConfig = configStore.getServerConfig(userId, serverName, methodName);
-            DataPlatformServicesConfig dataPlatformServicesConfig = serverConfig.getDataPlatformServicesConfig();
-            this.setDataPlatformServiceConfig(userId, serverName, dataPlatformServicesConfig);
-        }
-        catch (OMAGInvalidParameterException error)
-        {
+            List<String> configAuditTrail = serverConfig.getAuditTrail();
+            if (configAuditTrail == null) {
+                configAuditTrail = new ArrayList<>();
+            }
+            configAuditTrail.add(new Date().toString() + " " + userId + " removed configuration for " + serviceName);
+            serverConfig.setAuditTrail(configAuditTrail);
+            serverConfig.setDataPlatformServicesConfig(null);
+            configStore.saveServerConfig(serverName, methodName, serverConfig);
+
+        } catch (OMAGInvalidParameterException error) {
             exceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (OMAGNotAuthorizedException error)
-        {
+        } catch (OMAGNotAuthorizedException error) {
             exceptionHandler.captureNotAuthorizedException(response, error);
-        }
-        catch (Throwable  error)
-        {
+        } catch (Throwable error) {
             exceptionHandler.capturePlatformRuntimeException(serverName, methodName, response, error);
         }
 
